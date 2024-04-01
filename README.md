@@ -6,4 +6,4 @@
   - email varification
   - google oauth
 
-*__better to use django-allauth__*
+*__Another better option is to use django-allauth package__*
