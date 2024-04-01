@@ -1,0 +1,9 @@
+A simple django user manager app 
+the app contains
+login
+logout
+registration
+email varification
+google oauth
+
+better to use django-allauth
