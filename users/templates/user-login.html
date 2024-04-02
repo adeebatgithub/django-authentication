@@ -11,6 +11,13 @@
                 <h2>Login</h2>
                 <form action="#" method="post">
                     {% include "user-form.html" with form=form %}
+                    <div class="form-row bottom">
+                    <div class="form-check">
+                        <input type="checkbox" id="remenber" name="remenber" value="remenber">
+                        <label for="remenber"> Remember me?</label>
+                    </div>
+                    <a href="#url" class="forgot">Forgot password?</a>
+                    </div>
                     <button class="btn btn-primary btn-block" type="submit">Login</button>
                 </form>
                 <p class="continue"><span>or Login with</span></p>
