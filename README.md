@@ -3,6 +3,7 @@
   - login
   - logout
   - registration
+  - password management
   - email varification
   - google oauth
 

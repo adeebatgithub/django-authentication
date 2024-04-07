@@ -2,14 +2,15 @@
 {% block title %} Login {% endblock %}
 {% block content %}
 <div class="signinform">
-    <h1>Service Login Form</h1>
+    <h1>django-authentication</h1>
     <!-- container -->
     <div class="container">
         <!-- main content -->
         <div class="w3l-form-info">
             <div class="w3_info">
                 <h2>Login</h2>
-                <form action="#" method="post">
+                <form method="post">
+					{% csrf_token %}
                     {% include "user-form.html" with form=form %}
                     <div class="form-row bottom">
                     <div class="form-check">
@@ -22,24 +23,13 @@
                 </form>
                 <p class="continue"><span>or Login with</span></p>
                 <div class="social-login">
-                    <a href="#facebook">
-                        <div class="facebook">
-                            <span class="fab fa-facebook-f" aria-hidden="true"></span>
-
-                        </div>
-                    </a>
-                    <a href="#twitter">
-                        <div class="twitter">
-                            <span class="fab fa-twitter" aria-hidden="true"></span>
-                        </div>
-                    </a>
                     <a href="#google">
                         <div class="google">
                             <span class="fab fa-google" aria-hidden="true"></span>
                         </div>
                     </a>
                 </div>
-                <p class="account">Don't have an account? <a href="#signup">Sign up</a></p>
+				<p class="account">Don't have an account? <a href="{% url 'users:signup' %}">Sign up</a></p>
             </div>
         </div>
         <!-- //main content -->
