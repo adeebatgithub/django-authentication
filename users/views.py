@@ -6,9 +6,10 @@ from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404, redirect
 from django.conf import settings
 from django.contrib.auth.models import Group
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, logout
 
 from . import forms
+from .django_email import SendEmailView
 
 
 def test(request):
@@ -56,6 +57,7 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
         #User.staff: reverse_lazy("staff-home")
     }
     pattern_name = reverse_lazy("users:profile")
+    redirect_superuser_to_admin = True
 
     def get_group_and_url(self):
         #if self.group_and_url:
@@ -75,16 +77,22 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
         return user.groups.filter(name=group).exists()
     
     def get_redirect_url(self, *args, **kwargs):
+        if self.redirect_superuser_to_admin:
+            if self.request.user.is_superuser:
+                return "/admin"
+
         if self.get_group_and_url():
             print(self.get_group_and_url())
             for group, url in self.get_group_and_url().items():
                 if self.is_member(self.request.user, group):
                     return url
+
         if self.get_role_and_url():
             print(self.get_role_and_url())
             for role, url in self.get_role_and_url().items():
                 if self.request.user.role == role:
                     return url
+
         if self.get_pattern_name():
             return self.get_pattern_name()
 
@@ -109,21 +117,49 @@ class RegisterView(generic.CreateView):
     model = get_user_model()
     template_name = "user-register.html"
     form_class = forms.UserRegistrationForm
-    success_url = reverse_lazy("users:add-to-example-group")
+    success_url = reverse_lazy("users:add-example-role")
     
     def get_success_url(self, *args, **kwargs):
         self.request.session["user_id"] = self.object.id
         return self.success_url
 
 
+class AddRole(View):
+    """
+    base implimentation of adding a role to the user
+    inherit and define 'role' and 'success_url'
+    """
+    role = None # User.role
+    success_url = reverse_lazy("users:add-to-example-group")
+
+    def get_role(self):
+        if self.role:
+           return self.role 
+        raise ImproperlyConfigured(f"AddRole need a 'role'")
+
+    def get_success_url(self):
+        if self.success_url:
+            return self.success_url
+        raise ImproperlyConfigured(f"AddRole needs 'success_url'")
+
+    def get_user_object(self):
+        return get_object_or_404(get_user_model(), id=self.request.session.get("user_id"))
+
+    def get(self, request, *args, **kwargs):
+        model = self.get_user_object()
+        model.role = self.get_role()
+        model.save()
+        return redirect(self.get_success_url())
+
+
 class AddToGroup(View):
     """
     base implimentation of adding a user to a gruop
-    inherit and define 'group_name' add the user to the group
+    inherit and define 'group_name' add 'success_url'
     """
     group_name = None
     model = Group
-    success_url = None
+    success_url = reverse_lazy("users:login")
 
     def get_group_model(self):
         if self.group_name:
@@ -133,7 +169,7 @@ class AddToGroup(View):
     def get_success_url(self):
         if self.success_url:
             return self.success_url
-        return reverse("users:login")
+        raise ImproperlyConfigured(f"AddToGroup needs 'success_url'")
 
     def get_user_model(self, **kwargs):
         user_model = get_user_model()
@@ -147,6 +183,34 @@ class AddToGroup(View):
         return redirect(self.get_success_url())
 
 
+class AddExampleRole(AddRole):
+    role = get_user_model().EXAMPLE_ROLE
+
+
 class AddToExampleGroup(AddToGroup):
     group_name = "example"
 
+
+class PasswordResetView(generic.RedirectView):
+    url = reverse_lazy("users:send-reset-mail")
+
+
+class SendResetMail(SendEmailView):
+    template_name = "user-password-reset-mail.html"
+    success_url = reverse_lazy("users:mail-send-done")
+    email_subject = "Password Reset Mail"
+    send_html_email = True
+    email_template_name = "reset-mail.html"
+
+    def get_to_email(self):
+        return self.request.session.get("email")
+
+
+class MailSendDoneView(generic.TemplateView):
+    template_name = "mail-send-done.html"
+
+    def get_context_data(self):
+        email = self.request.session.pop("email")
+        context = super().get_context_data()
+        context.update({"email": email})
+        return context
