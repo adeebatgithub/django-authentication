@@ -50,8 +50,7 @@ class SendEmailMixin:
     
     def get_message(self):
         if self.send_html_email:
-            html_message = render_to_string(self.get_email_template_name(), self.get_context_data())
-            return strip_tags(html_message)
+            return render_to_string(self.get_email_template_name(), self.get_context_data())
 
         if not self.message:
             raise ImproperlyConfigured(f"{self.__class__.__name__} missing content for sending email")
@@ -62,13 +61,29 @@ class SendEmailMixin:
             raise ImproperlyConfigured(f"{self.__class__.__name__} need definition of 'email_subject' of implimentation of 'get_email_subject'")
         return self.email_subject
     
-    def send_mail(self):
+    def send_text_mail(self):
         mail.send_mail(
             self.get_email_subject(), 
             self.get_message(), 
             self.get_from_email(), 
             [self.get_to_email()],
         )
+
+    def send_html_mail(self):
+        email = mail.EmailMultiAlternatives(
+            self.get_email_subject(),
+            " ",
+            self.get_from_email(),
+            [self.get_to_email()]
+        )
+        email.attach_alternative(self.get_message(), "text/html")
+        email.send()
+
+    def send_mail(self):
+        if self.send_html_email:
+            self.send_html_mail()
+        else:
+            self.send_text_mail()
 
 
 class EmailForm(forms.Form):
