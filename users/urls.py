@@ -15,7 +15,8 @@ urlpatterns = [
     path('password-forgot/', views.PasswordResetRedirectView.as_view(), name='password-forgot'),
     path('send-reset-mail/', views.SendResetMail.as_view(), name='send-reset-mail'),
     path('reset-mail-sent-done/', views.MailSendDoneView.as_view(), name='mail-send-done'),
-    path('reset-password/<pk>', views.MailSendDoneView.as_view(), name='reset-password'),
+    path('reset-password/<uidb64>/<token>/', views.PasswordResetView.as_view(), name='reset-password'),
+    path('reset-password-done/', views.PasswordResetDoneView.as_view(), name='reset-password-done'),
 
     path('test/', views.test, name="test"),
 ]

@@ -7,6 +7,9 @@ from django.shortcuts import get_object_or_404, redirect
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model, logout
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
 
 from . import forms
 from .django_email import SendEmailView
@@ -49,18 +52,18 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
     """
     permanent = True
     group_and_url = {
-        #group name: redirect url
-        #customer: reverse_lazy("customer-home")
+        # group name: redirect url
+        # customer: reverse_lazy("customer-home")
     }
     role_and_url = {
-        #role name: redirect url
-        #User.staff: reverse_lazy("staff-home")
+        # role name: redirect url
+        # User.staff: reverse_lazy("staff-home")
     }
     pattern_name = reverse_lazy("users:profile")
     redirect_superuser_to_admin = True
 
     def get_group_and_url(self):
-        #if self.group_and_url:
+        # if self.group_and_url:
         #    return self.group_and_url
         return {"example": reverse_lazy("users:profile", kwargs={"username": self.request.user.username})}
 
@@ -69,13 +72,13 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
             return self.role_and_url
 
     def get_pattern_name(self):
-        #if self.pattern_name:
+        # if self.pattern_name:
         #    return self.pattern_name
         return reverse_lazy("users:profile", kwargs={"username": self.request.user.username})
 
     def is_member(self, user, group):
         return user.groups.filter(name=group).exists()
-    
+
     def get_redirect_url(self, *args, **kwargs):
         if self.redirect_superuser_to_admin:
             if self.request.user.is_superuser:
@@ -96,7 +99,8 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
         if self.get_pattern_name():
             return self.get_pattern_name()
 
-        raise ImproperlyConfigured("RedirectLoggedUser needs dict of 'group_and_url' or 'role_and_url' or 'pattern_name'")
+        raise ImproperlyConfigured(
+            "RedirectLoggedUser needs dict of 'group_and_url' or 'role_and_url' or 'pattern_name'")
 
 
 class LogoutView(auth_views.LogoutView):
@@ -118,7 +122,7 @@ class RegisterView(generic.CreateView):
     template_name = "user-register.html"
     form_class = forms.UserRegistrationForm
     success_url = reverse_lazy("users:add-example-role")
-    
+
     def get_success_url(self, *args, **kwargs):
         self.request.session["user_id"] = self.object.id
         return self.success_url
@@ -129,12 +133,12 @@ class AddRole(View):
     base implimentation of adding a role to the user
     inherit and define 'role' and 'success_url'
     """
-    role = None # User.role
+    role = None  # User.role
     success_url = reverse_lazy("users:add-to-example-group")
 
     def get_role(self):
         if self.role:
-           return self.role 
+            return self.role
         raise ImproperlyConfigured(f"AddRole need a 'role'")
 
     def get_success_url(self):
@@ -165,7 +169,7 @@ class AddToGroup(View):
         if self.group_name:
             return get_object_or_404(self.model, name=self.group_name)
         raise ImproperlyConfigured(f"AddToGroup needs either a definition of 'group_name'")
-    
+
     def get_success_url(self):
         if self.success_url:
             return self.success_url
@@ -207,7 +211,9 @@ class SendResetMail(SendEmailView):
 
     def get_email_context_data(self):
         user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
-        url = reverse_lazy("users:reset-password", kwargs={"pk": user.id})
+        uidb64 = urlsafe_base64_encode(force_bytes(user.id))
+        token = default_token_generator.make_token(user)
+        url = reverse_lazy("users:reset-password", kwargs={"uidb64": uidb64, "token": token})
         uri = self.request.build_absolute_uri(url)
         context = {"url": uri}
         return context
@@ -223,5 +229,11 @@ class MailSendDoneView(generic.TemplateView):
         return context
 
 
-class PasswordResetView():
-    pass
+class PasswordResetView(auth_views.PasswordResetConfirmView):
+    form_class = forms.PasswordResetForm
+    success_url = reverse_lazy("users:reset-password-done")
+    template_name = "user-password-reset.html"
+
+
+class PasswordResetDoneView(generic.TemplateView):
+    template_name = "user-password-done.html"
