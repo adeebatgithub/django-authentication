@@ -12,9 +12,10 @@ urlpatterns = [
     path('register/add-example-role', views.AddExampleRole.as_view(), name='add-example-role'),
     path('register/add-to-example-group/', views.AddToExampleGroup.as_view(), name='add-to-example-group'),
 
-    path('password-forgot/', views.PasswordResetView.as_view(), name='password-reset'),
+    path('password-forgot/', views.PasswordResetRedirectView.as_view(), name='password-forgot'),
     path('send-reset-mail/', views.SendResetMail.as_view(), name='send-reset-mail'),
     path('reset-mail-sent-done/', views.MailSendDoneView.as_view(), name='mail-send-done'),
+    path('reset-password/<pk>', views.MailSendDoneView.as_view(), name='reset-password'),
 
     path('test/', views.test, name="test"),
 ]

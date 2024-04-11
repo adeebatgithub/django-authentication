@@ -40,9 +40,6 @@ class SendEmailMixin:
 
         raise ImproperlyConfigured(f"{self.__class__.__name__} missing from email id, define 'from_email' or 'settings.EMAIL_HOST_USER:'")
 
-    def get_context_data(self):
-        return {"email": self.get_to_email()}
-
     def get_email_template_name(self):
         if not self.email_template_name:
             raise ImproperlyConfigured(f"{self.__class__.__name__} missing email template, define 'email_template_name'")
@@ -50,7 +47,8 @@ class SendEmailMixin:
     
     def get_message(self):
         if self.send_html_email:
-            return render_to_string(self.get_email_template_name(), self.get_context_data())
+            print(self.get_email_context_data())
+            return render_to_string(self.get_email_template_name(), self.get_email_context_data())
 
         if not self.message:
             raise ImproperlyConfigured(f"{self.__class__.__name__} missing content for sending email")
@@ -110,6 +108,9 @@ class SendEmailView(SendEmailMixin, TemplateView):
         context = TemplateView().get_context_data(*args, **kwargs)
         context.update({"form": self.get_form()})
         return context
+
+    def get_email_context_data(self):
+        pass
 
     def form_valid(self, form):
         User = get_user_model()

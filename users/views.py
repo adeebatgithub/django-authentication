@@ -191,7 +191,7 @@ class AddToExampleGroup(AddToGroup):
     group_name = "example"
 
 
-class PasswordResetView(generic.RedirectView):
+class PasswordResetRedirectView(generic.RedirectView):
     url = reverse_lazy("users:send-reset-mail")
 
 
@@ -205,12 +205,23 @@ class SendResetMail(SendEmailView):
     def get_to_email(self):
         return self.request.session.get("email")
 
+    def get_email_context_data(self):
+        user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
+        url = reverse_lazy("users:reset-password", kwargs={"pk": user.id})
+        uri = self.request.build_absolute_uri(url)
+        context = {"url": uri}
+        return context
+
 
 class MailSendDoneView(generic.TemplateView):
     template_name = "mail-send-done.html"
 
-    def get_context_data(self):
+    def get_context_data(self, *args, **kwargs):
         email = self.request.session.pop("email")
         context = super().get_context_data()
         context.update({"email": email})
         return context
+
+
+class PasswordResetView():
+    pass
