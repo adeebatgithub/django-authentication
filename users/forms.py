@@ -43,7 +43,3 @@ class PasswordResetForm(auth_forms.SetPasswordForm):
         super().__init__(*args, **kwargs)
         self.fields["new_password1"].widget.attrs["placeholder"] = "New Password"
         self.fields["new_password2"].widget.attrs["placeholder"] = "Confirm Password"
-
-
-class OTPForm(forms.Form):
-    otp = forms.CharField(max_length=6, widget=forms.TextInput(attrs={"placeholder": "enter otp"}))
