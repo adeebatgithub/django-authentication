@@ -144,7 +144,12 @@ class PasswordResetRedirectView(generic.RedirectView):
     redirect the user to provide their registered email to
     send a reset link or an OTP
     """
-    url = reverse_lazy("users:send-reset-link-mail")
+    otp = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        if self.otp:
+            return reverse_lazy("users:create-reset-otp-mail")
+        return reverse_lazy("users:send-reset-link-mail")
 
 
 class SendResetMail(SendEmailView):
@@ -164,7 +169,7 @@ class SendResetLinkMail(SendResetMail):
     """
     send password reset link to the email
     """
-    email_template_name = "reset-mail.html"
+    email_template_name = "reset-link-mail.html"
 
     def get_email_context_data(self):
         user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
