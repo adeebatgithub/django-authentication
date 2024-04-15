@@ -12,7 +12,8 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 
 from . import forms
-from .django_email import SendEmailView
+from .django_email import SendEmailView, generate_otp
+from .models import OTPModel
 
 
 def test(request):
@@ -188,26 +189,45 @@ class AddToGroup(View):
 
 
 class AddExampleRole(AddRole):
+    """
+    give users  the specified role
+    """
     role = get_user_model().EXAMPLE_ROLE
 
 
 class AddToExampleGroup(AddToGroup):
+    """
+    add users to the specified group
+    """
     group_name = "example"
 
 
 class PasswordResetRedirectView(generic.RedirectView):
+    """
+    redirect the user to provide their regiatered email to
+    send a reset link or an OTP
+    """
     url = reverse_lazy("users:send-reset-mail")
 
 
 class SendResetMail(SendEmailView):
+    """
+    send reset mail to the provided email if it is registered
+    """
     template_name = "user-password-reset-mail.html"
     success_url = reverse_lazy("users:mail-send-done")
     email_subject = "Password Reset Mail"
     send_html_email = True
-    email_template_name = "reset-mail.html"
 
     def get_to_email(self):
         return self.request.session.get("email")
+
+
+class SendResetLinkMail(SendResetMail):
+    """
+    send password reset link to the email
+    """
+    email_template_name = "reset-mail.html"
 
     def get_email_context_data(self):
         user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
@@ -219,7 +239,74 @@ class SendResetMail(SendEmailView):
         return context
 
 
+class OTPCreateView(View):
+
+    def get(self, request):
+        user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
+        otp_number = generate_otp()
+        otp_model = OTPModel(user=user, otp=otp_number)
+        otp_model.save()
+        return redirect(reverse_lazy("users:send-reset-otp-mail"))
+
+
+class SendResetOTPMail(SendResetMail):
+    """
+    send OTP for varification
+    """
+    success_url = reverse_lazy("users:verify-otp")
+    
+    def get_email_context_data(self):
+        user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
+        otp_model = get_object_or_404(OTPModel, user=user)
+        return {"otp": otp_model.otp}
+
+
+class VarifyOTPView(generic.TemplateView):
+    """
+    verify the OTP
+    """
+    template_name = "user-otp.html"
+    success_url = reverse_lazy("users:mail-send-done")
+    form_class = forms.OTPForm
+
+    def get_form(self):
+        if self.request.POST:
+            return self.form_class(self.request.POST)
+        return self.form_class()
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context.update({"form": self.get_form()})
+        return context
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data())
+
+    def form_valid(self, form):
+        user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
+        otp_model = get_object_or_404(OTPModel, user=user)
+        otp_number = form.cleaned_data.get("otp")
+        if otp_number == otp_model.otp:
+            if otp_model.is_expired():
+                form.add_error("otp", "OTP is expired")
+                return self.render_to_response({"form": form})
+            otp_model.delete()
+            return redirect(self.get_success_url())
+        form.add_error("otp", "OTP is not valid")
+        return self.render_to_response({"form": form})
+
+    def post(self, *args, **kwargs):
+       form = self.get_form()
+       if form.is_valid():
+           return self.form_valid(form)
+       else:
+           return self.form_invalid(form)
+
+
 class MailSendDoneView(generic.TemplateView):
+    """
+    render a template after successfully sending email with success message
+    """
     template_name = "mail-send-done.html"
 
     def get_context_data(self, *args, **kwargs):
@@ -230,10 +317,64 @@ class MailSendDoneView(generic.TemplateView):
 
 
 class PasswordResetView(auth_views.PasswordResetConfirmView):
+    """
+    password reset
+    """
     form_class = forms.PasswordResetForm
     success_url = reverse_lazy("users:reset-password-done")
     template_name = "user-password-reset.html"
 
 
 class PasswordResetDoneView(generic.TemplateView):
+    """
+    render a template after successfull password reset
+    """
     template_name = "user-password-done.html"
+
+
+class PasswordChangeRedirectView(generic.RedirectView):
+    """
+    redirect to send email to the user eighter a password change link
+    or a varification OTP
+    """
+    pattern_name = "users:send-password-change-otp"
+
+
+class SendChangeMail(LoginRequiredMixin, SendEmailView):
+    """
+    send password change email to user's email
+    """
+    template_name = "user-password-change-mail.html"
+    success_url = reverse_lazy("users:change-mail-send-done")
+    email_subject = "Password Change Mail"
+    send_html_email = True
+    email_template_name = "password-change-mail.html"
+
+    def get_to_email(self):
+        return self.request.user.email
+
+
+class SendChangeLinkMail(SendChangeMail):
+    """
+    send password change link to the user's email
+    """
+    pass
+
+
+class SendChangeOTPMail(SendChangeMail):
+    """
+    send verification OTP to the users email
+    """
+    pass
+
+
+class PasswordChangeView(auth_views.PasswordChangeView):
+    """
+    change password
+    """
+    form_class = forms.ChangePasswordForm
+    template_name = "user-password-change.html"
+    
+    def get_success_url(self):
+        logout(self.request)
+        return reverse_lazy("users:login")

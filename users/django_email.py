@@ -7,6 +7,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.shortcuts import redirect
+import random
 
 # change all the email to mail
 
@@ -131,3 +132,7 @@ class SendEmailView(SendEmailMixin, TemplateView):
            return self.form_valid(form)
        else:
            return self.form_invalid(form)
+
+
+def generate_otp():
+    return random.randint(100000, 999999)
