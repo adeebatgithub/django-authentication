@@ -1,6 +1,5 @@
 venv/
 django_auth/__pycache__/
-django_auth/.env
 users/__pycache__/
 users/migrations/__pycache__/
 .idea/
