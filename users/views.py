@@ -2,13 +2,13 @@ from django.contrib.auth import get_user_model, logout
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ImproperlyConfigured
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import generic
 
 from . import forms
 from .base_views import AddToGroup, AddRole
-from .django_mail.views import SendEmailView, VerifyOTPView, generate_reset_url, OTPCreateView
+from .django_mail.views import SendEmailView, VerifyOTPView, generate_reset_url, generate_otp
 from .models import OTPModel
 
 
@@ -144,11 +144,11 @@ class PasswordResetRedirectView(generic.RedirectView):
     redirect the user to provide their registered email to
     send a reset link or an OTP
     """
-    otp = True
+    otp = False
 
     def get_redirect_url(self, *args, **kwargs):
         if self.otp:
-            return reverse_lazy("users:create-reset-otp-mail")
+            return reverse_lazy("users:send-reset-otp-mail")
         return reverse_lazy("users:send-reset-link-mail")
 
 
@@ -178,18 +178,11 @@ class SendResetLinkMail(SendResetMail):
         return context
 
 
-class CreateResetOTP(OTPCreateView):
-    model = OTPModel
-    success_url = reverse_lazy("users:send-reset-otp-mail")
-
-    def get_user_kwargs(self):
-        return {"email": self.request.session.get("email")}
-
-
 class SendResetOTPMail(SendResetMail):
     """
     send OTP for verification
     """
+    email_template_name = "reset-otp-mail.html"
     success_url = reverse_lazy("users:verify-password-reset-otp")
 
     def get_email_context_data(self):
@@ -197,15 +190,39 @@ class SendResetOTPMail(SendResetMail):
         otp_model = get_object_or_404(OTPModel, user=user)
         return {"otp": otp_model.otp}
 
+    def create_otp(self):
+        user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
+        otp_no = generate_otp()
+        otp = OTPModel(user=user, otp=otp_no)
+        otp.save()
+
+    def form_valid(self, form):
+        User = get_user_model()
+        email = form.cleaned_data.get("email")
+        self.request.session["email"] = email
+        if User.objects.filter(email=email).exists():
+            user = get_object_or_404(User, email=email)
+            if OTPModel.objects.filter(user=user).exists():
+                otp = get_object_or_404(OTPModel, user=user)
+                if not otp.is_expired:
+                    return redirect(self.get_success_url())
+                otp.delete()
+            self.create_otp()
+            self.send_mail()
+            return redirect(self.get_success_url())
+        form.add_error("email", "This email is not registered")
+        return render_to_response(self.get_context_data(form=form))
+
 
 class VerifyResetOTPView(VerifyOTPView):
     template_name = "user-verify-otp.html"
+    model = OTPModel
 
     def get_user_kwargs(self):
         return {"email": self.request.session.get("email")}
 
     def get_success_url(self):
-        return generate_reset_url(pattern_name="users:password-reset", user=get_user_model())
+        return generate_reset_url(pattern_name="users:reset-password", user=self.get_user_model())
 
 
 class PasswordResetView(auth_views.PasswordResetConfirmView):
@@ -229,7 +246,13 @@ class PasswordChangeRedirectView(generic.RedirectView):
     redirect to send email to the user righter a password change link
     or a verification OTP
     """
-    pattern_name = "users:send-password-change-mail"
+    otp = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        if self.otp:
+            return reverse_lazy("users:send-change-otp-mail")
+        return reverse_lazy("users:send-change-link-mail")
+
 
 
 class SendChangeMail(LoginRequiredMixin, SendEmailView):
@@ -240,41 +263,81 @@ class SendChangeMail(LoginRequiredMixin, SendEmailView):
     success_url = reverse_lazy("users:change-mail-send-done")
     email_subject = "Password Change Mail"
     send_html_email = True
-    email_template_name = "password-change-mail.html"
 
     def get_to_email(self):
         return self.request.user.email
+
+    def get_context_data(self):
+        if self.request.user.email:
+            return
+        return super().get_context_data()
 
 
 class SendChangeLinkMail(SendChangeMail):
     """
     send password change link to the user's email
     """
+    email_template_name = "change-link-mail.html"
 
     def get_email_context_data(self):
         url = generate_reset_url(pattern_name="users:change-password", user=self.request)
         context = {"url": url}
         return context
 
+    def post(self, request):
+        if "email" in request.POST:
+            super().post(request)
 
-class CreateChangeOTP(OTPCreateView):
-    model = OTPModel
-    success_url = reverse_lazy("users:send-change-otp-mail")
+        self.send_mail()
+        return redirect(self.get_success_url())
 
-    def get_user_kwargs(self):
-        return {"email": self.request.user.email}
+
 
 
 class SendChangeOTPMail(SendChangeMail):
     """
     send verification OTP to the users email
     """
+    email_template_name = "change-otp-mail.html"
     success_url = reverse_lazy("users:verify-password-change-otp")
 
     def get_email_context_data(self):
         user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
         otp_model = get_object_or_404(OTPModel, user=user)
         return {"otp": otp_model.otp}
+
+    def create_otp(self):
+        user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
+        otp_no = generate_otp()
+        otp = OTPModel(user=user, otp=otp_no)
+        otp.save()
+
+    def form_valid(self, form):
+        User = get_user_model()
+        email = form.cleaned_data.get("email")
+        self.request.session["email"] = email
+        if User.objects.filter(email=email).exists():
+            user = get_object_or_404(User, email=email)
+            if OTPModel.objects.filter(user=user).exists():
+                otp = get_object_or_404(OTPModel, user=user)
+                if not otp.is_expired:
+                    return redirect(self.get_success_url())
+                otp.delete()
+            self.create_otp()
+            self.send_mail()
+            return redirect(self.get_success_url())
+        form.add_error("email", "This email is not registered")
+        return render_to_response(self.get_context_data(form=form))
+
+    def post(self, request):
+        if "email" in request.POST:
+            super().post(request)
+
+        self.create_otp()
+        self.send_mail()
+        return redirect(self.get_success_url())
+
+
 
 
 class VerifyChangeOTPView(VerifyOTPView):

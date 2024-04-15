@@ -2,4 +2,5 @@ venv/
 django_auth/__pycache__/
 users/__pycache__/
 users/migrations/__pycache__/
+users/django_mail/__pycache__/
 .idea/

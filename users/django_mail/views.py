@@ -47,30 +47,6 @@ def generate_otp():
     return random.randint(100000, 999999)
 
 
-class OTPCreateView(View):
-    model = None
-    user_kwargs = {}
-    success_url = None
-
-    def get_success_url(self):
-        if not self.success_url:
-            raise ImproperlyConfigured("No URL to redirect to. Provide a success_url.")
-        return str(self.success_url)
-
-    def get_user_kwargs(self):
-        return self.user_kwargs
-
-    def get_user_model(self):
-        return get_object_or_404(get_user_model(), **self.get_user_kwargs())
-
-    def get(self, request):
-        user = self.get_user_model()
-        otp_number = generate_otp()
-        otp_model = self.model(user=user, otp=otp_number)
-        otp_model.save()
-        return redirect(self.get_success_url())
-
-
 class VerifyOTPView(FormMixin, generic.TemplateView):
     """
     verify the OTP
@@ -92,13 +68,14 @@ class VerifyOTPView(FormMixin, generic.TemplateView):
         return get_object_or_404(self.model, user=user)
 
     def form_valid(self, form):
-        otp_model = self.get_otp_model()
-        otp_number = form.cleaned_data.get("otp")
-        if otp_number == otp_model.otp:
-            otp_model.delete()
-            if otp_model.is_expired():
-                form.add_error("otp", "OTP is expired")
-                return self.render_to_response(self.get_context_data(form=form))
-            return redirect(self.get_success_url())
+        if self.model.objects.filter(user=self.get_user_model()):
+            otp_model = self.get_otp_model()
+            otp_number = form.cleaned_data.get("otp")
+            if otp_number == otp_model.otp:
+                otp_model.delete()
+                if otp_model.is_expired():
+                    form.add_error("otp", "OTP is expired")
+                    return self.render_to_response(self.get_context_data(form=form))
+                return redirect(self.get_success_url())
         form.add_error("otp", "OTP is not valid")
         return self.render_to_response(self.get_context_data(form=form))

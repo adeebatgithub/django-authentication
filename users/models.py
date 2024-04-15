@@ -1,8 +1,8 @@
-from datetime import datetime
-
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.utils import timezone
+import datetime
 
 
 class User(AbstractUser):
@@ -27,11 +27,11 @@ class OTPModel(models.Model):
     expires = models.DateTimeField(null=True, blank=True)
 
     def is_expired(self):
-        return datetime.now() > self.expires
+        return timezone.now() > self.expires
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.expires = self.created + datetime.timedelta(minutes=settings.OTP_EXPIRY)
+            self.expires = timezone.now() + datetime.timedelta(minutes=settings.OTP_EXPIRY)
         super(OTPModel, self).save(*args, **kwargs)
 
     def __str__(self):
