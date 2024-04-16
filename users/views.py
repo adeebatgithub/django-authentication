@@ -241,7 +241,7 @@ class PasswordResetDoneView(generic.TemplateView):
     template_name = "user-password-reset-done.html"
 
 
-class PasswordChangeRedirectView(generic.RedirectView):
+class PasswordChangeRedirectView(LoginRequiredMixin, generic.RedirectView):
     """
     redirect to send email to the user righter a password change link
     or a verification OTP
@@ -252,7 +252,6 @@ class PasswordChangeRedirectView(generic.RedirectView):
         if self.otp:
             return reverse_lazy("users:send-change-otp-mail")
         return reverse_lazy("users:send-change-link-mail")
-
 
 
 class SendChangeMail(LoginRequiredMixin, SendEmailView):
@@ -269,7 +268,7 @@ class SendChangeMail(LoginRequiredMixin, SendEmailView):
 
     def get_context_data(self):
         if self.request.user.email:
-            return
+            return {}
         return super().get_context_data()
 
 
@@ -290,8 +289,6 @@ class SendChangeLinkMail(SendChangeMail):
 
         self.send_mail()
         return redirect(self.get_success_url())
-
-
 
 
 class SendChangeOTPMail(SendChangeMail):
@@ -338,8 +335,6 @@ class SendChangeOTPMail(SendChangeMail):
         return redirect(self.get_success_url())
 
 
-
-
 class VerifyChangeOTPView(VerifyOTPView):
     template_name = "user-verify-otp.html"
 
@@ -347,7 +342,7 @@ class VerifyChangeOTPView(VerifyOTPView):
         return self.request.user
 
     def get_success_url(self):
-        return generate_reset_url(pattern_name="users:change-password", user=get_user_model())
+        return generate_reset_url(pattern_name="users:password-change", user=get_user_model())
 
 
 class PasswordChangeView(auth_views.PasswordChangeView):
