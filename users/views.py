@@ -157,7 +157,7 @@ class SendResetMail(SendEmailView):
     send reset mail to the provided email if it is registered
     """
     template_name = "user-password-reset-mail.html"
-    success_url = reverse_lazy("users:mail-send-done")
+    success_url = reverse_lazy("users:reset-mail-send-done")
     email_subject = "Password Reset Mail"
     send_html_email = True
 
@@ -246,7 +246,7 @@ class PasswordChangeRedirectView(LoginRequiredMixin, generic.RedirectView):
     redirect to send email to the user righter a password change link
     or a verification OTP
     """
-    otp = False
+    otp = True
 
     def get_redirect_url(self, *args, **kwargs):
         if self.otp:
@@ -259,17 +259,16 @@ class SendChangeMail(LoginRequiredMixin, SendEmailView):
     send password change email to user's email
     """
     template_name = "user-password-change-mail.html"
-    success_url = reverse_lazy("users:change-mail-send-done")
     email_subject = "Password Change Mail"
     send_html_email = True
 
     def get_to_email(self):
         return self.request.user.email
 
-    def get_context_data(self):
+    def get_context_data(self, **kwargs):
         if self.request.user.email:
             return {}
-        return super().get_context_data()
+        return super().get_context_data(**kwargs)
 
 
 class SendChangeLinkMail(SendChangeMail):
@@ -277,9 +276,10 @@ class SendChangeLinkMail(SendChangeMail):
     send password change link to the user's email
     """
     email_template_name = "change-link-mail.html"
+    success_url = reverse_lazy("users:change-mail-send-done")
 
     def get_email_context_data(self):
-        url = generate_reset_url(pattern_name="users:change-password", user=self.request)
+        url = generate_reset_url(pattern_name="users:change-password", user=self.request.user, absolute=True, request=self.request)
         context = {"url": url}
         return context
 
@@ -299,14 +299,12 @@ class SendChangeOTPMail(SendChangeMail):
     success_url = reverse_lazy("users:verify-password-change-otp")
 
     def get_email_context_data(self):
-        user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
-        otp_model = get_object_or_404(OTPModel, user=user)
+        otp_model = get_object_or_404(OTPModel, user=self.request.user)
         return {"otp": otp_model.otp}
 
     def create_otp(self):
-        user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
         otp_no = generate_otp()
-        otp = OTPModel(user=user, otp=otp_no)
+        otp = OTPModel(user=self.request.user, otp=otp_no)
         otp.save()
 
     def form_valid(self, form):
@@ -324,12 +322,17 @@ class SendChangeOTPMail(SendChangeMail):
             self.send_mail()
             return redirect(self.get_success_url())
         form.add_error("email", "This email is not registered")
-        return render_to_response(self.get_context_data(form=form))
+        return self.render_to_response(self.get_context_data(form=form))
 
     def post(self, request):
         if "email" in request.POST:
             super().post(request)
 
+        if OTPModel.objects.filter(user=request.user).exists():
+            otp = get_object_or_404(OTPModel, user=request.user)
+            if otp.is_expired:
+                otp.delete()
+            return redirect(self.get_success_url())
         self.create_otp()
         self.send_mail()
         return redirect(self.get_success_url())
@@ -337,12 +340,13 @@ class SendChangeOTPMail(SendChangeMail):
 
 class VerifyChangeOTPView(VerifyOTPView):
     template_name = "user-verify-otp.html"
+    model = OTPModel
 
     def get_user_model(self):
         return self.request.user
 
     def get_success_url(self):
-        return generate_reset_url(pattern_name="users:password-change", user=get_user_model())
+        return generate_reset_url(pattern_name="users:change-password", user=self.get_user_model())
 
 
 class PasswordChangeView(auth_views.PasswordChangeView):

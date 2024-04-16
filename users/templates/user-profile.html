@@ -1,0 +1,30 @@
+{% extends "user-base.html" %}
+{% block title %}
+	Profile
+{% endblock %}
+{% block content %}
+	<div class="signinform">
+        <div class="container">
+            <div>
+                User name : {{ user.username }}
+            </div>
+            <div>
+                Full name : {{ user.first_name }} {{ user.last_name }}
+            </div>
+            <div {% if not user.email_varified %} style="color: red" {% endif %}>
+                Email : {{ user.email }}
+                {% if not user.email %}
+                    <a href="">add email</a>
+                {% else %}
+                    {% if not user.email_varified %}
+                        <a href="">verify email</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div>
+                <a href="{% url 'users:password-change' %}"><button class="btn btn-primary btn-block" type="submit">Change password</button></a>
+                <a href="{% url 'users:logout' %}"><button class="btn btn-primary btn-block" type="submit">Logout</button></a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

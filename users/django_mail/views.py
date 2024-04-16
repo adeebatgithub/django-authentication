@@ -65,10 +65,15 @@ class VerifyOTPView(FormMixin, generic.TemplateView):
 
     def get_otp_model(self):
         user = self.get_user_model()
-        return get_object_or_404(self.model, user=user)
+        return get_object_or_404(self.get_model(), user=user)
+
+    def get_model(self):
+        if self.model is None:
+            raise ImproperlyConfigured(f"{self.__class__.__name__} has no model specified")
+        return self.model
 
     def form_valid(self, form):
-        if self.model.objects.filter(user=self.get_user_model()):
+        if self.get_model().objects.filter(user=self.get_user_model()):
             otp_model = self.get_otp_model()
             otp_number = form.cleaned_data.get("otp")
             if otp_number == otp_model.otp:

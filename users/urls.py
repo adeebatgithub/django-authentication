@@ -14,17 +14,17 @@ urlpatterns = [
 
     path('password-forgot/', views.PasswordResetRedirectView.as_view(), name='password-forgot'),
     path('send-reset-link-mail/', views.SendResetLinkMail.as_view(), name='send-reset-link-mail'),
-    path('reset-mail-sent-done/', views.MailSendDoneView.as_view(), name='mail-send-done'),
+    path('reset-mail-sent-done/', views.MailSendDoneView.as_view(), name='reset-mail-send-done'),
     path('send-reset-otp-mail/', views.SendResetOTPMail.as_view(), name='send-reset-otp-mail'),
-    path('verify-otp/', views.VerifyResetOTPView.as_view(), name='verify-password-reset-otp'),
+    path('reset-verify-otp/', views.VerifyResetOTPView.as_view(), name='verify-password-reset-otp'),
     path('reset-password/<uidb64>/<token>/', views.PasswordResetView.as_view(), name='reset-password'),
     path('reset-password-done/', views.PasswordResetDoneView.as_view(), name='reset-password-done'),
 
     path('password-change/', views.PasswordChangeRedirectView.as_view(), name='password-change'),
     path('send-change-link-mail/', views.SendChangeLinkMail.as_view(), name='send-change-link-mail'),
-    path('reset-mail-sent-done/', views.MailSendDoneView.as_view(), name='mail-send-done'),
+    path('change-mail-sent-done/', views.MailSendDoneView.as_view(), name='change-mail-send-done'),
     path('send-change-otp-mail/', views.SendChangeOTPMail.as_view(), name='send-change-otp-mail'),
-    path('verify-otp/', views.VerifyChangeOTPView.as_view(), name='verify-password-change-otp'),
+    path('change-verify-otp/', views.VerifyChangeOTPView.as_view(), name='verify-password-change-otp'),
     path('change-password/<uidb64>/<token>/', views.PasswordChangeView.as_view(), name='change-password'),
 
     path('test/', views.test, name="test"),
