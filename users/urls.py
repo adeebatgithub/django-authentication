@@ -27,5 +27,10 @@ urlpatterns = [
     path('change-verify-otp/', views.VerifyChangeOTPView.as_view(), name='verify-password-change-otp'),
     path('change-password/<uidb64>/<token>/', views.PasswordChangeView.as_view(), name='change-password'),
 
+    path('verify-email/', views.EmailVerificationRedirect.as_view(), name='verify-email'),
+    path('send-verification-otp/', views.SendVarificationMail.as_view(), name='send-verification-otp'),
+    path('verify-verification-otp/', views.VerifyAccount.as_view(), name='verify-verification-otp'),
+    path('update-verification-status/', views.UpdateVerificationStatus.as_view(), name='update-verification-status'),
+
     path('test/', views.test, name="test"),
 ]

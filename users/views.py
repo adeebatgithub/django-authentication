@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views import generic
+from django.views import generic, View
 
 from . import forms
 from .base_views import AddToGroup, AddRole
@@ -372,3 +372,56 @@ class MailSendDoneView(generic.TemplateView):
         context = super().get_context_data()
         context.update({"email": email})
         return context
+
+
+class EmailVerificationRedirect(LoginRequiredMixin ,generic.RedirectView):
+    permenant = True
+    pattern_name = "users:send-verification-otp"
+
+    def get_redirect_url(self):
+        if self.request.user.email_verified:
+            return reverse_lazy("users:profile", kwargs={"username": self.request.user.username})
+        return reverse_lazy(self.pattern_name)
+
+
+class SendVarificationMail(LoginRequiredMixin, SendEmailView):
+    template_name = "user-verify-email.html"
+    success_url = reverse_lazy("users:verify-verification-otp")
+    send_html_email = True
+    email_subject = "Account Verification"
+    email_template_name = "user-verification-mail.html"
+
+    def get_to_email(self):
+        return self.request.user.email
+
+    def get_email_context_data(self):
+        otp = get_object_or_404(OTPModel, user=self.request.user)
+        return {"otp": otp.otp}
+
+    def post(self, request):
+        otp = OTPModel(user=request.user, otp=generate_otp())
+        otp.save()
+        self.send_mail()
+        return redirect(self.get_success_url())
+
+
+class VerifyAccount(LoginRequiredMixin, VerifyOTPView):
+    template_name = "user-verify-otp.html"
+    model = OTPModel
+    success_url = reverse_lazy("users:update-verification-status")
+
+    def get_user_model(self):
+        return self.request.user
+
+
+class UpdateVerificationStatus(LoginRequiredMixin, View):
+    success_url = None
+
+    def get_success_url(self):
+        return reverse_lazy("users:profile", kwargs={"username": self.request.user.username})
+    
+    def get(self, request):
+        user = get_object_or_404(get_user_model(), id=request.user.id)
+        user.email_verified = True
+        user.save()
+        return redirect(self.get_success_url())

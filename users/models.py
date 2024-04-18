@@ -18,6 +18,7 @@ class User(AbstractUser):
     )
     
     role = models.PositiveSmallIntegerField(choices=ROLES, null=True, blank=True)
+    email_verified = models.BooleanField(default=False, null=True)
 
 
 class OTPModel(models.Model):
