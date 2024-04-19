@@ -144,6 +144,7 @@ class PasswordResetRedirectView(generic.RedirectView):
     """
     redirect the user to provide their registered email to
     send a reset link or an OTP
+    otp = True will send otp instead of link
     """
     otp = False
 
@@ -216,6 +217,9 @@ class SendResetOTPMail(SendResetMail):
 
 
 class VerifyResetOTPView(VerifyOTPView):
+    """
+    verify the otp that is provided by the user
+    """
     template_name = "user-verify-otp.html"
     model = OTPModel
 
@@ -246,6 +250,7 @@ class PasswordChangeRedirectView(LoginRequiredMixin, generic.RedirectView):
     """
     redirect to send email to the user righter a password change link
     or a verification OTP
+    otp = True will send an otp instead of link
     """
     otp = True
 
@@ -340,6 +345,9 @@ class SendChangeOTPMail(SendChangeMail):
 
 
 class VerifyChangeOTPView(VerifyOTPView):
+    """
+    verify the otp provided by the user
+    """
     template_name = "user-verify-otp.html"
     model = OTPModel
 
@@ -376,10 +384,14 @@ class MailSendDoneView(generic.TemplateView):
 
 
 class EmailVerificationRedirect(LoginRequiredMixin ,generic.RedirectView):
+    """
+    redirect the user to confirm send email
+    otp = True will send an otp instead of link
+    """
     permenant = True
     otp_pattern_name = "users:send-verification-otp"
     link_pattern_name = "users:send-verification-link"
-    otp = True
+    otp = False
 
     def get_redirect_url(self):
         if self.request.user.email_verified:
@@ -390,6 +402,9 @@ class EmailVerificationRedirect(LoginRequiredMixin ,generic.RedirectView):
 
 
 class SendVerificationLinkMail(LoginRequiredMixin, SendEmailView):
+    """
+    send an email with email verification link
+    """
     template_name = "user-verify-email.html"
     success_url = reverse_lazy("users:verification-mail-send-done")
     send_html_email = True
@@ -415,6 +430,9 @@ class SendVerificationLinkMail(LoginRequiredMixin, SendEmailView):
 
 
 class VerifyAccountLink(View):
+    """
+    verify the email
+    """
 
     def get(self, request, uidb64, **kwargs):
         user_id = urlsafe_base64_decode(uidb64)
@@ -425,6 +443,9 @@ class VerifyAccountLink(View):
 
 
 class SendVerificationOTPMail(LoginRequiredMixin, SendEmailView):
+    """
+    send an email with email verification otp
+    """
     template_name = "user-verify-email.html"
     success_url = reverse_lazy("users:verify-verification-otp")
     send_html_email = True
@@ -446,6 +467,9 @@ class SendVerificationOTPMail(LoginRequiredMixin, SendEmailView):
 
 
 class VerifyAccountOTP(LoginRequiredMixin, VerifyOTPView):
+    """
+    verify the otp provided by the user
+    """
     template_name = "user-verify-otp.html"
     model = OTPModel
     success_url = reverse_lazy("users:update-verification-status")
@@ -455,6 +479,9 @@ class VerifyAccountOTP(LoginRequiredMixin, VerifyOTPView):
 
 
 class UpdateVerificationStatus(LoginRequiredMixin, View):
+    """
+    after otp verification verify the email
+    """
     success_url = None
 
     def get_success_url(self):
