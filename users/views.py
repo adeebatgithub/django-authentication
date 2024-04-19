@@ -5,6 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import generic, View
+from django.utils.http import urlsafe_base64_decode
 
 from . import forms
 from .base_views import AddToGroup, AddRole
@@ -376,20 +377,59 @@ class MailSendDoneView(generic.TemplateView):
 
 class EmailVerificationRedirect(LoginRequiredMixin ,generic.RedirectView):
     permenant = True
-    pattern_name = "users:send-verification-otp"
+    otp_pattern_name = "users:send-verification-otp"
+    link_pattern_name = "users:send-verification-link"
+    otp = True
 
     def get_redirect_url(self):
         if self.request.user.email_verified:
             return reverse_lazy("users:profile", kwargs={"username": self.request.user.username})
-        return reverse_lazy(self.pattern_name)
+        if self.otp:
+            return reverse_lazy(self.otp_pattern_name)
+        return reverse_lazy(self.link_pattern_name)
 
 
-class SendVarificationMail(LoginRequiredMixin, SendEmailView):
+class SendVerificationLinkMail(LoginRequiredMixin, SendEmailView):
+    template_name = "user-verify-email.html"
+    success_url = reverse_lazy("users:verification-mail-send-done")
+    send_html_email = True
+    email_subject = "Account Verification"
+    email_template_name = "user-verification-link-mail.html"
+
+    def get_to_email(self):
+        return self.request.user.email
+
+    def get_email_context_data(self):
+        url = generate_reset_url(
+                pattern_name="users:account-verification-link",
+                user=self.request.user,
+                absolute=True,
+                request=self.request
+            )
+        return {"url": url}
+
+    def post(self, request):
+        self.send_mail()
+        request.session["email"] = self.get_to_email()
+        return redirect(self.get_success_url())
+
+
+class VerifyAccountLink(View):
+
+    def get(self, request, uidb64, **kwargs):
+        user_id = urlsafe_base64_decode(uidb64)
+        user = get_object_or_404(get_user_model(), id=user_id)
+        user.email_verified = True
+        user.save()
+        return redirect(reverse_lazy("users:profile", kwargs={"username": user.username}))
+
+
+class SendVerificationOTPMail(LoginRequiredMixin, SendEmailView):
     template_name = "user-verify-email.html"
     success_url = reverse_lazy("users:verify-verification-otp")
     send_html_email = True
     email_subject = "Account Verification"
-    email_template_name = "user-verification-mail.html"
+    email_template_name = "user-verification-otp-mail.html"
 
     def get_to_email(self):
         return self.request.user.email
@@ -405,7 +445,7 @@ class SendVarificationMail(LoginRequiredMixin, SendEmailView):
         return redirect(self.get_success_url())
 
 
-class VerifyAccount(LoginRequiredMixin, VerifyOTPView):
+class VerifyAccountOTP(LoginRequiredMixin, VerifyOTPView):
     template_name = "user-verify-otp.html"
     model = OTPModel
     success_url = reverse_lazy("users:update-verification-status")
@@ -425,3 +465,6 @@ class UpdateVerificationStatus(LoginRequiredMixin, View):
         user.email_verified = True
         user.save()
         return redirect(self.get_success_url())
+
+
+
