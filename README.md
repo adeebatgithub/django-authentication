@@ -3,8 +3,14 @@
   - login
   - logout
   - registration
+  - give role
+  - change role
+  - add to group
+  - change group
   - password management
-  - email varification
+    - password reset if forgotten (otp & link)
+    - password change with old password (otp & link)
+  - email varification (otp & link)
   - google oauth
 
 *__Another better option is to use django-allauth package__*
