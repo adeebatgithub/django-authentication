@@ -8,8 +8,9 @@ from django.views import generic, View
 from django.utils.http import urlsafe_base64_decode
 
 from . import forms
-from .base_views import AddToGroup, AddRole
+from .base_views import AddToGroup, AddRole, RoleChangeView
 from .django_mail.views import SendEmailView, VerifyOTPView, generate_reset_url, generate_otp
+from .django_mail.mixins import SendEmailMixin
 from .models import OTPModel
 
 
@@ -48,7 +49,6 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
     to redirect users based on role define 'role_and_url'
     to redirect all users to same url or to redirect users who are not in any group, define 'pattern_name'
     """
-    permanent = True
     group_and_url = {
         # group name: redirect url
         # customer: reverse_lazy("customer-home")
@@ -494,4 +494,54 @@ class UpdateVerificationStatus(LoginRequiredMixin, View):
         return redirect(self.get_success_url())
 
 
+class SendRoleChangeMail(SendEmailMixin, View):
+    to_email = settings.EMAIL_HOST_USER
+    email_subject = "Role Change Request"
+    send_html_email = True
+    email_template_name = "user-role-chamge-mail.html"
+    success_url = reverse_lazy("users:role-change-mail-send-done")
 
+    def get_success_url(self):
+        return self.success_url
+
+    def get_from_email(self):
+        return self.request.user.email
+
+    def get_email_context_data(self):
+        url = generate_reset_url(
+                pattern_name="users:change-role",
+                user=self.request.user,
+                absolute=True,
+                request=self.request
+            )
+        return {
+                "username": self.request.user.username,
+                "email": self.request.user.email,
+                "role": self.kwargs.get("role")
+                "url": url
+                }
+
+    def get(self, request, **kwargs):
+        role = kwargs.get("role")
+        self.send_mail()
+        return redirect(self.get_success_url())
+
+
+class RoleChangeMailSendDone(LoginRequiredMixin, generic.TemplateView):
+    template_name = "user-role-chane-mail-send-done.html"
+
+
+class RoleChangeToExample(RoleChangeView):
+    role_name = get_user_model().EXAMPLE_ROLE
+
+
+class RoleChangeDone(generic.TemplateView):
+    template_name = "user-role-change-done.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "username": self.request.session.pop("USER_NAME"),
+            "role": self.request.session.pop("ROLE")
+        })
+        return context

@@ -63,3 +63,35 @@ class AddToGroup(View):
         user = self.get_user_model(id=user_id)
         user.groups.add(group)
         return redirect(self.get_success_url())
+
+
+class RoleChangeView(View):
+    role_name = None
+    success_url = reverse_lazt("users:role-change-done")
+
+    def get_role_name(self):
+        if self.role_name:
+            return self.role_name
+        raise ImproperlyConfiguered(f"{self.__class__.__name__} missing role_name")
+
+    def get_user_model(self):
+        user_id = urlsafe_base64_decode(self.kwargs.get("uidb64"))
+        return get_object_or_404(get_user_model(), id=user_id)
+
+    def get_success_url(self):
+        if self.success_url:
+            return self.success_url
+        raise ImproperlyConfiguered(f"{self.__class__.__name__} missing success_url")
+
+    def set_role(self, user):
+        user.role = self.get_role_name()
+        user.save()
+
+    def add_to_group(self, user):
+        user.groups.add(self.role_name)
+
+    def get(self, request, **kwargs):
+        user = self.get_user_model()
+        self.set_role(user)
+        self.add_to_group(users)                                request.session["USER_NAME"] = user.username            request.session["ROLE"] = kwargs.get("role")
+        return redirect(self.get_success_url())

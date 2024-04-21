@@ -101,5 +101,15 @@ urlpatterns = [
     # verify email
     path('update-verification-status/', views.UpdateVerificationStatus.as_view(), name='update-verification-status'),
 
+    # change the role and grouo of an user
+    # an email will pass to the settings.EMAIL_HOST_USER to verify and change role
+    path('send-role-change-mail/', views.SendRoleChangeMail.as_view(), name='send-role-change-mail'),
+    # show success message
+    path('send-role-change-mail-done/', views.RoleChangeMailSendDone.as_view(), name='send-role-change-mail-done'),
+    # change role and group
+    path('change-role/<uidb64>/<token>', views.RoleChangeToExample.as_view(), name='change-role'),
+    # show success message
+    path('role-change-done/', views.RoleChangeDone.as_view(), name='role-change-done'),
+
     path('test/', views.test, name="test"),
 ]
