@@ -1,6 +1,6 @@
-{% extends 'user-base.html' %}
+{% extends 'common/user-base.html' %}
 {% block title %} Password Reset {% endblock %}
 {% block content %}
-<p>Password reset successful</p>
+<p>Role change request of {{ username }} to {{ role }} has been {{ status }}</p>
 <a href="{% url 'users:login' %}">Login</a>
 {% endblock %}

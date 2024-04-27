@@ -34,10 +34,10 @@ class SendEmailView(FormMixin, SendEmailMixin, TemplateView):
         return self.render_to_response(self.get_context_data(form=form))
 
 
-def generate_reset_url(pattern_name, user, absolute=False, request=None):
+def generate_reset_url(pattern_name, user, absolute=False, request=None, **kwargs):
     uidb64 = urlsafe_base64_encode(force_bytes(user.id))
     token = default_token_generator.make_token(user)
-    url = reverse_lazy(pattern_name, kwargs={"uidb64": uidb64, "token": token})
+    url = reverse_lazy(pattern_name, kwargs={"uidb64": uidb64, "token": token, **kwargs})
     if absolute:
         return request.build_absolute_uri(url)
     return url

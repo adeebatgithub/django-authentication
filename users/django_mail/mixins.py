@@ -42,6 +42,9 @@ class SendEmailMixin:
                 (f"{self.__class__.__name__} missing email template, define 'email_template_name'")
         return self.email_template_name
 
+    def get_email_context_data(self):
+        pass
+
     def get_message(self):
         if self.send_html_email:
             print(self.get_email_context_data())

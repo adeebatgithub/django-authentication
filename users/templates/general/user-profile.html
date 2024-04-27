@@ -1,4 +1,4 @@
-{% extends "user-base.html" %}
+{% extends "common/user-base.html" %}
 {% block title %}
 	Profile
 {% endblock %}
@@ -23,6 +23,7 @@
             </div>
             <div>
                 <a href="{% url 'users:password-change' %}"><button class="btn btn-primary btn-block" type="submit">Change password</button></a>
+                <a href="{% url 'users:send-role-change-mail' role="STAFF" %}"><button class="btn btn-primary btn-block" type="submit">Change Role</button></a>
                 <a href="{% url 'users:logout' %}"><button class="btn btn-primary btn-block" type="submit">Logout</button></a>
             </div>
         </div>

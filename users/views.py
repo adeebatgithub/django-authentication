@@ -4,13 +4,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views import generic, View
 from django.utils.http import urlsafe_base64_decode
+from django.views import generic, View
+from django.conf import settings
 
 from . import forms
 from .base_views import AddToGroup, AddRole, RoleChangeView
-from .django_mail.views import SendEmailView, VerifyOTPView, generate_reset_url, generate_otp
 from .django_mail.mixins import SendEmailMixin
+from .django_mail.views import SendEmailView, VerifyOTPView, generate_reset_url, generate_otp
 from .models import OTPModel
 
 
@@ -22,7 +23,7 @@ class ProfileView(LoginRequiredMixin, generic.TemplateView):
     """
     user profile page
     """
-    template_name = "user-profile.html"
+    template_name = "general/user-profile.html"
 
 
 class LoginView(auth_views.LoginView):
@@ -33,7 +34,7 @@ class LoginView(auth_views.LoginView):
     set settings.LOGIN_REDIRECT_URL to 'users:redirect-logged-user'
     to redirect user based on the group or role
     """
-    template_name = "user-login.html"
+    template_name = "general/user-login.html"
     form_class = forms.UserLoginForm
     redirect_authenticated_user = True
     pattern_name = "users:redirect-user"
@@ -117,7 +118,7 @@ class RegisterView(generic.CreateView):
     regular user is created and redirected to add the user in to a group
     """
     model = get_user_model()
-    template_name = "user-register.html"
+    template_name = "general/user-register.html"
     form_class = forms.UserRegistrationForm
     success_url = reverse_lazy("users:add-example-role")
 
@@ -158,7 +159,7 @@ class SendResetMail(SendEmailView):
     """
     send reset mail to the provided email if it is registered
     """
-    template_name = "user-password-reset-mail.html"
+    template_name = "password-forgot/user-password-reset-mail.html"
     success_url = reverse_lazy("users:reset-mail-send-done")
     email_subject = "Password Reset Mail"
     send_html_email = True
@@ -171,7 +172,7 @@ class SendResetLinkMail(SendResetMail):
     """
     send password reset link to the email
     """
-    email_template_name = "reset-link-mail.html"
+    email_template_name = "password-forgot/reset-link-mail.html"
 
     def get_email_context_data(self):
         user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
@@ -184,7 +185,7 @@ class SendResetOTPMail(SendResetMail):
     """
     send OTP for verification
     """
-    email_template_name = "reset-otp-mail.html"
+    email_template_name = "password-forgot/reset-otp-mail.html"
     success_url = reverse_lazy("users:verify-password-reset-otp")
 
     def get_email_context_data(self):
@@ -213,14 +214,14 @@ class SendResetOTPMail(SendResetMail):
             self.send_mail()
             return redirect(self.get_success_url())
         form.add_error("email", "This email is not registered")
-        return render_to_response(self.get_context_data(form=form))
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class VerifyResetOTPView(VerifyOTPView):
     """
     verify the otp that is provided by the user
     """
-    template_name = "user-verify-otp.html"
+    template_name = "common/user-verify-otp.html"
     model = OTPModel
 
     def get_user_kwargs(self):
@@ -236,14 +237,14 @@ class PasswordResetView(auth_views.PasswordResetConfirmView):
     """
     form_class = forms.PasswordResetForm
     success_url = reverse_lazy("users:reset-password-done")
-    template_name = "user-password-reset.html"
+    template_name = "password-forgot/user-password-reset.html"
 
 
 class PasswordResetDoneView(generic.TemplateView):
     """
     render a template after successfully password reset
     """
-    template_name = "user-password-reset-done.html"
+    template_name = "password-forgot/user-password-reset-done.html"
 
 
 class PasswordChangeRedirectView(LoginRequiredMixin, generic.RedirectView):
@@ -264,7 +265,7 @@ class SendChangeMail(LoginRequiredMixin, SendEmailView):
     """
     send password change email to user's email
     """
-    template_name = "user-password-change-mail.html"
+    template_name = "password-change/user-password-change-mail.html"
     email_subject = "Password Change Mail"
     send_html_email = True
 
@@ -281,11 +282,12 @@ class SendChangeLinkMail(SendChangeMail):
     """
     send password change link to the user's email
     """
-    email_template_name = "change-link-mail.html"
+    email_template_name = "password-change/change-link-mail.html"
     success_url = reverse_lazy("users:change-mail-send-done")
 
     def get_email_context_data(self):
-        url = generate_reset_url(pattern_name="users:change-password", user=self.request.user, absolute=True, request=self.request)
+        url = generate_reset_url(pattern_name="users:change-password", user=self.request.user, absolute=True,
+                                 request=self.request)
         context = {"url": url}
         return context
 
@@ -301,7 +303,7 @@ class SendChangeOTPMail(SendChangeMail):
     """
     send verification OTP to the users email
     """
-    email_template_name = "change-otp-mail.html"
+    email_template_name = "password-change/change-otp-mail.html"
     success_url = reverse_lazy("users:verify-password-change-otp")
 
     def get_email_context_data(self):
@@ -348,7 +350,7 @@ class VerifyChangeOTPView(VerifyOTPView):
     """
     verify the otp provided by the user
     """
-    template_name = "user-verify-otp.html"
+    template_name = "common/user-verify-otp.html"
     model = OTPModel
 
     def get_user_model(self):
@@ -363,7 +365,7 @@ class PasswordChangeView(auth_views.PasswordChangeView):
     change password
     """
     form_class = forms.ChangePasswordForm
-    template_name = "user-password-change.html"
+    template_name = "password-change/user-password-change.html"
 
     def get_success_url(self):
         logout(self.request)
@@ -374,7 +376,7 @@ class MailSendDoneView(generic.TemplateView):
     """
     render a template after successfully sending email with success message
     """
-    template_name = "mail-send-done.html"
+    template_name = "common/mail-send-done.html"
 
     def get_context_data(self, *args, **kwargs):
         email = self.request.session.pop("email")
@@ -383,12 +385,11 @@ class MailSendDoneView(generic.TemplateView):
         return context
 
 
-class EmailVerificationRedirect(LoginRequiredMixin ,generic.RedirectView):
+class EmailVerificationRedirect(LoginRequiredMixin, generic.RedirectView):
     """
     redirect the user to confirm send email
     otp = True will send an otp instead of link
     """
-    permenant = True
     otp_pattern_name = "users:send-verification-otp"
     link_pattern_name = "users:send-verification-link"
     otp = False
@@ -405,22 +406,22 @@ class SendVerificationLinkMail(LoginRequiredMixin, SendEmailView):
     """
     send an email with email verification link
     """
-    template_name = "user-verify-email.html"
+    template_name = "verification/user-verify-email.html"
     success_url = reverse_lazy("users:verification-mail-send-done")
     send_html_email = True
     email_subject = "Account Verification"
-    email_template_name = "user-verification-link-mail.html"
+    email_template_name = "verification/user-verification-link-mail.html"
 
     def get_to_email(self):
         return self.request.user.email
 
     def get_email_context_data(self):
         url = generate_reset_url(
-                pattern_name="users:account-verification-link",
-                user=self.request.user,
-                absolute=True,
-                request=self.request
-            )
+            pattern_name="users:account-verification-link",
+            user=self.request.user,
+            absolute=True,
+            request=self.request
+        )
         return {"url": url}
 
     def post(self, request):
@@ -446,7 +447,7 @@ class SendVerificationOTPMail(LoginRequiredMixin, SendEmailView):
     """
     send an email with email verification otp
     """
-    template_name = "user-verify-email.html"
+    template_name = "verification/user-verify-email.html"
     success_url = reverse_lazy("users:verify-verification-otp")
     send_html_email = True
     email_subject = "Account Verification"
@@ -470,7 +471,7 @@ class VerifyAccountOTP(LoginRequiredMixin, VerifyOTPView):
     """
     verify the otp provided by the user
     """
-    template_name = "user-verify-otp.html"
+    template_name = "common/user-verify-otp.html"
     model = OTPModel
     success_url = reverse_lazy("users:update-verification-status")
 
@@ -486,7 +487,7 @@ class UpdateVerificationStatus(LoginRequiredMixin, View):
 
     def get_success_url(self):
         return reverse_lazy("users:profile", kwargs={"username": self.request.user.username})
-    
+
     def get(self, request):
         user = get_object_or_404(get_user_model(), id=request.user.id)
         user.email_verified = True
@@ -498,8 +499,8 @@ class SendRoleChangeMail(SendEmailMixin, View):
     to_email = settings.EMAIL_HOST_USER
     email_subject = "Role Change Request"
     send_html_email = True
-    email_template_name = "user-role-chamge-mail.html"
-    success_url = reverse_lazy("users:role-change-mail-send-done")
+    email_template_name = "role/user-role-change-mail.html"
+    success_url = reverse_lazy("users:send-role-change-mail-done")
 
     def get_success_url(self):
         return self.success_url
@@ -508,18 +509,26 @@ class SendRoleChangeMail(SendEmailMixin, View):
         return self.request.user.email
 
     def get_email_context_data(self):
-        url = generate_reset_url(
-                pattern_name="users:change-role",
-                user=self.request.user,
-                absolute=True,
-                request=self.request
-            )
+        accept_url = generate_reset_url(
+            pattern_name="users:change-role",
+            user=self.request.user,
+            absolute=True,
+            request=self.request
+        )
+        decline_url = generate_reset_url(
+            pattern_name="users:change-role-fail",
+            user=self.request.user,
+            absolute=True,
+            request=self.request,
+            role=self.kwargs.get("role")
+        )
         return {
-                "username": self.request.user.username,
-                "email": self.request.user.email,
-                "role": self.kwargs.get("role")
-                "url": url
-                }
+            "username": self.request.user.username,
+            "email": self.request.user.email,
+            "role": self.kwargs.get("role"),
+            "accept_url": accept_url,
+            "decline_url": decline_url,
+        }
 
     def get(self, request, **kwargs):
         role = kwargs.get("role")
@@ -528,20 +537,86 @@ class SendRoleChangeMail(SendEmailMixin, View):
 
 
 class RoleChangeMailSendDone(LoginRequiredMixin, generic.TemplateView):
-    template_name = "user-role-chane-mail-send-done.html"
+    template_name = "role/user-role-chane-mail-send-done.html"
 
 
-class RoleChangeToExample(RoleChangeView):
-    role_name = get_user_model().EXAMPLE_ROLE
+class RoleChangeToStaff(RoleChangeView):
+    role_name = get_user_model().STAFF
+    group_name = "staff"
+    success_url = reverse_lazy("users:change-role-done-mail")
+
+
+class RoleChangeDecline(generic.RedirectView):
+
+    def get_redirect_url(self, *args, **kwargs):
+        user_id = urlsafe_base64_decode(self.kwargs.get("uidb64"))
+        user = get_object_or_404(get_user_model(), id=user_id)
+        self.request.session["USER_NAME"] = user.username
+        self.request.session["USER_EMAIL"] = user.email
+        self.request.session["ROLE"] = self.kwargs.get("role")
+        return reverse_lazy("users:change-role-fail-mail")
+
+
+class RoleChangeDoneMail(SendEmailMixin, View):
+    email_subject = "Role Change Done"
+    send_html_email = True
+    email_template_name = "role/user-role-change-done-mail.html"
+    success_url = reverse_lazy("users:role-change-done")
+
+    def get_success_url(self):
+        return self.success_url
+    def get_to_email(self):
+        return self.request.session.pop("USER_EMAIL")
+
+    def get_email_context_data(self):
+        return {"message": "your role change request has been verified and changed successfully"}
+
+    def get(self, request, *args, **kwargs):
+        self.send_mail()
+        return redirect(self.get_success_url())
+
+
+class RoleChangeFailMail(LoginRequiredMixin, SendEmailMixin, View):
+    email_subject = "Role Change Failed"
+    send_html_email = True
+    email_template_name = "role/user-role-change-done-mail.html"
+    success_url = reverse_lazy("users:role-change-fail")
+
+    def get_success_url(self):
+        return self.success_url
+
+    def get_to_email(self):
+        return self.request.session.pop("USER_EMAIL")
+
+    def get_email_context_data(self):
+        return {"message": "your role change request has been declined by the admin"}
+
+    def get(self, request, *args, **kwargs):
+        self.send_mail()
+        return redirect(self.get_success_url())
 
 
 class RoleChangeDone(generic.TemplateView):
-    template_name = "user-role-change-done.html"
+    template_name = "role/user-role-change-done.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update({
             "username": self.request.session.pop("USER_NAME"),
-            "role": self.request.session.pop("ROLE")
+            "role": self.request.session.pop("ROLE"),
+            "status": "accepted",
+        })
+        return context
+
+
+class RoleChangeDeclined(generic.TemplateView):
+    template_name = "role/user-role-change-done.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "username": self.request.session.pop("USER_NAME"),
+            "role": self.request.session.pop("ROLE"),
+            "status": "declined",
         })
         return context

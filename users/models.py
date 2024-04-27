@@ -11,9 +11,10 @@ class User(AbstractUser):
     # CUSTOMER = 1
     # STAFF = 2
     EXAMPLE_ROLE = 1
+    STAFF = 2
     ROLES = (
         # (CUSTOMER, "customer")
-        # (STAFF, "staff")
+        (STAFF, "staff"),
         (EXAMPLE_ROLE, "example role"),
     )
     
