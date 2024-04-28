@@ -8,33 +8,43 @@ from django.urls import reverse_lazy
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.views import generic, View
-from django.views.generic import TemplateView
 
 from .forms import EmailForm, OTPForm
 from .mixins import SendEmailMixin, FormMixin
+from users.models import OTPModel
 
 
-class SendEmailView(FormMixin, SendEmailMixin, TemplateView):
+class GetEmailView(FormMixin, generic.TemplateView):
     template_name = None
-    success_url = None
     form_class = EmailForm
-    email_field_name = "email"
+
+    def form_valid(self, form):
+        self.request.session['USER_EMAIL'] = form.cleaned_data['email']
+        return redirect(self.get_success_url())
+
+
+class SendEmailView(SendEmailMixin, View):
+    """
+    View to send email using django's smtp system
+    """
+    success_url = None
 
     def get_email_context_data(self):
         pass
 
-    def form_valid(self, form):
-        User = get_user_model()
-        email = form.cleaned_data[self.email_field_name]
-        if User.objects.filter(email=email).exists():
-            self.request.session["email"] = email
-            self.send_mail()
-            return redirect(self.get_success_url())
-        form.add_error("email", "This email is not registered")
-        return self.render_to_response(self.get_context_data(form=form))
+    def get_success_url(self):
+        if self.success_url:
+            return self.success_url
+        raise ImproperlyConfigured(
+            f"{self.__class__.__name__} missing 'success_url' attribute, define 'success_url' attribute or define "
+            f"'get_success_url' method")
+
+    def get(self, request, *args, **kwargs):
+        self.send_mail()
+        return redirect(self.get_success_url())
 
 
-def generate_reset_url(pattern_name, user, absolute=False, request=None, **kwargs):
+def generate_uidb64_url(pattern_name, user, absolute=False, request=None, **kwargs):
     uidb64 = urlsafe_base64_encode(force_bytes(user.id))
     token = default_token_generator.make_token(user)
     url = reverse_lazy(pattern_name, kwargs={"uidb64": uidb64, "token": token, **kwargs})
@@ -52,7 +62,7 @@ class VerifyOTPView(FormMixin, generic.TemplateView):
     verify the OTP
     """
     template_name = None
-    model = None
+    model = OTPModel
     success_url = None
     form_class = OTPForm
     user_kwargs = {}

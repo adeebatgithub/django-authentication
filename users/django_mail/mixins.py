@@ -6,9 +6,11 @@ from django.views.generic.edit import FormMixin as BaseFormMixin
 
 
 class SendEmailMixin:
+    """
+    A mixin for sending emil using django's email system (smtp)
+    """
     from_email = None
     to_email = None
-    # recipient_list = []
     email_subject = None
     message = None
     send_html_email = False
@@ -16,15 +18,6 @@ class SendEmailMixin:
 
     def get_to_email(self):
         return self.to_email
-
-    # def get_recipient_email_list(self):
-    #    if self.to_email:
-    #        return self.get_to_email()
-    #
-    #    if not self.recipient_list:
-    #        return self.recipient_list
-    #
-    #    raise ImproperlyConfigured(f"{self.__class__.__name__} missing recipient emails, define 'recipient_list'")
 
     def get_from_email(self):
         if self.from_email:
@@ -86,6 +79,9 @@ class SendEmailMixin:
 
 
 class FormMixin(BaseFormMixin):
+    """
+    Form mixin with additional post method
+    """
 
     def post(self, *args, **kwargs):
         form = self.get_form()
