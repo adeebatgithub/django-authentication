@@ -21,6 +21,9 @@ class User(AbstractUser):
     role = models.PositiveSmallIntegerField(choices=ROLES, null=True, blank=True)
     email_verified = models.BooleanField(default=False, null=True)
 
+    def is_email_verified(self):
+        return self.email_verified
+
 
 class OTPModel(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

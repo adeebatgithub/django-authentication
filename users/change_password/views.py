@@ -10,11 +10,6 @@ from users.models import OTPModel
 from . import forms
 
 
-class GetEMailView(mail_views.GetEmailView):
-    template_name = 'password-change/user-password-change-mail.html'
-    success_url = reverse_lazy("users:change-password-redirect")
-
-
 class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
     """
     redirect to send email to the user righter a password change link
@@ -29,7 +24,7 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
         return reverse_lazy("users:change-send-link-mail")
 
 
-class SendChangeMail(LoginRequiredMixin, mail_views.SendEmailView):
+class ChangeSendMail(LoginRequiredMixin, mail_views.SendEmailView):
     """
     send password change email to user's email
     """
@@ -41,7 +36,7 @@ class SendChangeMail(LoginRequiredMixin, mail_views.SendEmailView):
         return self.request.user.email
 
 
-class SendChangeLinkMail(SendChangeMail):
+class ChangeSendLinkMail(ChangeSendMail):
     """
     send password change link to the user's email
     """
@@ -59,13 +54,14 @@ class SendChangeLinkMail(SendChangeMail):
         return context
 
 
-class ChangeOTPCreateView(View):
+class ChangeOTPCreateView(LoginRequiredMixin, View):
+    success_url = reverse_lazy("users:change-send-otp-mail")
 
     def get_user_model(self):
-        return get_object_or_404(get_user_model(), email=self.request.session.get("USER_EMAIL"))
+        return self.request.user
 
     def get_success_url(self):
-        return reverse_lazy("users:change-send-otp-mail")
+        return self.success_url
 
     def get(self, request, *args, **kwargs):
         user = self.get_user_model()
@@ -75,59 +71,23 @@ class ChangeOTPCreateView(View):
         return redirect(self.get_success_url())
 
 
-class SendChangeOTPMail(SendChangeMail):
+class ChangeSendOTPMail(ChangeSendMail):
     """
     send verification OTP to the users email
     """
     email_template_name = "password-change/change-otp-mail.html"
-    success_url = reverse_lazy("users:verify-password-change-otp")
+    success_url = reverse_lazy("users:change-verify-otp")
 
     def get_email_context_data(self):
-        otp_model = get_object_or_404(OTPModel, user=self.request.user)
+        otp_model = get_object_or_404(OTPModel, user=self.request.session.pop("OTP_ID"))
         return {"otp": otp_model.otp}
 
-    def create_otp(self):
-        otp_no = mail_views.generate_otp()
-        otp = OTPModel(user=self.request.user, otp=otp_no)
-        otp.save()
 
-    def form_valid(self, form):
-        User = get_user_model()
-        email = form.cleaned_data.get("email")
-        self.request.session["email"] = email
-        if User.objects.filter(email=email).exists():
-            user = get_object_or_404(User, email=email)
-            if OTPModel.objects.filter(user=user).exists():
-                otp = get_object_or_404(OTPModel, user=user)
-                if not otp.is_expired:
-                    return redirect(self.get_success_url())
-                otp.delete()
-            self.create_otp()
-            self.send_mail()
-            return redirect(self.get_success_url())
-        form.add_error("email", "This email is not registered")
-        return self.render_to_response(self.get_context_data(form=form))
-
-    def post(self, request):
-        if "email" in request.POST:
-            super().post(request)
-
-        if OTPModel.objects.filter(user=request.user).exists():
-            otp = get_object_or_404(OTPModel, user=request.user)
-            if otp.is_expired:
-                otp.delete()
-            return redirect(self.get_success_url())
-        self.create_otp()
-        self.send_mail()
-        return redirect(self.get_success_url())
-
-
-class VerifyChangeOTPView(mail_views.VerifyOTPView):
+class ChangeVerifyOTPView(LoginRequiredMixin, mail_views.VerifyOTPView):
     """
     verify the otp provided by the user
     """
     template_name = "common/user-verify-otp.html"
-    model = OTPModel
 
     def get_user_model(self):
         return self.request.user
@@ -136,7 +96,7 @@ class VerifyChangeOTPView(mail_views.VerifyOTPView):
         return mail_views.generate_uidb64_url(pattern_name="users:change-password", user=self.get_user_model())
 
 
-class PasswordChangeView(auth_views.PasswordChangeView):
+class PasswordChangeView(LoginRequiredMixin, auth_views.PasswordChangeView):
     """
     change password
     """

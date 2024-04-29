@@ -1,6 +1,7 @@
 import random
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import redirect, get_object_or_404
@@ -9,9 +10,9 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.views import generic, View
 
+from users.models import OTPModel
 from .forms import EmailForm, OTPForm
 from .mixins import SendEmailMixin, FormMixin
-from users.models import OTPModel
 
 
 class GetEmailView(FormMixin, generic.TemplateView):
@@ -55,6 +56,24 @@ def generate_uidb64_url(pattern_name, user, absolute=False, request=None, **kwar
 
 def generate_otp():
     return random.randint(100000, 999999)
+
+
+class OTPCreateView(View):
+    success_url = None
+    user = None
+
+    def get_user_model(self):
+        return self.user
+
+    def get_success_url(self):
+        return self.success_url
+
+    def get(self, request, *args, **kwargs):
+        user = self.get_user_model()
+        otp = OTPModel(user=user, otp=generate_otp())
+        otp.save()
+        request.session["OTP_ID"] = otp.id
+        return redirect(self.get_success_url())
 
 
 class VerifyOTPView(FormMixin, generic.TemplateView):
