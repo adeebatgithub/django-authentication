@@ -40,7 +40,6 @@ class SendEmailMixin:
 
     def get_message(self):
         if self.send_html_email:
-            print(self.get_email_context_data())
             return render_to_string(self.get_email_template_name(), self.get_email_context_data())
 
         if not self.message:

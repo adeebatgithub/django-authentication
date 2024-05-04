@@ -1,15 +1,14 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.http import urlsafe_base64_decode
 from django.views import generic, View
+from braces.views import LoginRequiredMixin, SuperuserRequiredMixin
 
 from users.django_mail.mixins import SendEmailMixin
 from users.django_mail.views import generate_uidb64_url, SendEmailView
 from .base_views import RoleChangeView
-from .mixins import SuperUserRequiredMixin
 
 
 class RoleSendChangeMail(LoginRequiredMixin, SendEmailView):
@@ -41,7 +40,7 @@ class RoleChangeMailSendDone(LoginRequiredMixin, generic.TemplateView):
     template_name = "role/user-role-chane-mail-send-done.html"
 
 
-class RoleChangeConfirm(SuperUserRequiredMixin, generic.TemplateView):
+class RoleChangeConfirm(SuperuserRequiredMixin, generic.TemplateView):
     template_name = "role/user-role-change-confirm.html"
 
     def get_context_data(self, **kwargs):

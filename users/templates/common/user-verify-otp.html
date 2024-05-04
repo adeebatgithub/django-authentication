@@ -1,5 +1,5 @@
 {% extends "common/user-base.html" %}
-{% block title %} Login {% endblock %}
+{% block title %} Verify OTP {% endblock %}
 {% block content %}
 <div class="signinform">
     <h1>django-authentication</h1>
@@ -8,11 +8,11 @@
         <!-- main content -->
         <div class="w3l-form-info">
             <div class="w3_info">
-                <h2>Reset Password</h2>
+                <h2>{{ title }}</h2>
                 <form method="post">
 					{% csrf_token %}
-                    {% include "user-form.html" with form=form %}
-                    <button class="btn btn-primary btn-block" type="submit">Sent email</button>
+                    {% include "common/user-form.html" with form=form %}
+                    <button class="btn btn-primary btn-block" type="submit">Verify</button>
                 </form>
             </div>
         </div>

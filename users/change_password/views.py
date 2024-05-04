@@ -16,7 +16,7 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
     or a verification OTP
     otp = True will send an otp instead of link
     """
-    otp = True
+    otp = False
 
     def get_redirect_url(self, *args, **kwargs):
         if self.otp:
@@ -51,6 +51,7 @@ class ChangeSendLinkMail(ChangeSendMail):
             request=self.request
         )
         context = {"url": url}
+        self.request.session["USER_EMAIL_ID"] = self.get_to_email()
         return context
 
 
@@ -79,7 +80,8 @@ class ChangeSendOTPMail(ChangeSendMail):
     success_url = reverse_lazy("users:change-verify-otp")
 
     def get_email_context_data(self):
-        otp_model = get_object_or_404(OTPModel, user=self.request.session.pop("OTP_ID"))
+        id = self.request.session.pop("OTP_ID")
+        otp_model = get_object_or_404(OTPModel, id=id)
         return {"otp": otp_model.otp}
 
 
@@ -91,6 +93,11 @@ class ChangeVerifyOTPView(LoginRequiredMixin, mail_views.VerifyOTPView):
 
     def get_user_model(self):
         return self.request.user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"title": "Change Password"})
+        return context
 
     def get_success_url(self):
         return mail_views.generate_uidb64_url(pattern_name="users:change-password", user=self.get_user_model())
@@ -115,7 +122,7 @@ class MailSendDoneView(generic.TemplateView):
     template_name = "common/mail-send-done.html"
 
     def get_context_data(self, *args, **kwargs):
-        email = self.request.session.pop("email")
+        email = self.request.session.pop("USER_EMAIL_ID")
         context = super().get_context_data()
         context.update({"email": email})
         return context

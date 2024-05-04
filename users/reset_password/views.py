@@ -48,9 +48,13 @@ class ResetSendLinkMail(ResetSendMail):
     email_template_name = "password-forgot/reset-link-mail.html"
 
     def get_email_context_data(self):
-        user = get_object_or_404(get_user_model(), email=self.request.session.get("email"))
-        url = mail_views.generate_uidb64_url(pattern_name="users:reset-password", user=user, absolute=True,
-                                             request=self.request)
+        user = get_object_or_404(get_user_model(), email=self.get_to_email())
+        url = mail_views.generate_uidb64_url(
+            pattern_name="users:reset-password",
+            user=user,
+            absolute=True,
+            request=self.request
+        )
         context = {"url": url}
         return context
 
@@ -90,7 +94,7 @@ class MailSendDoneView(generic.TemplateView):
     template_name = "common/mail-send-done.html"
 
     def get_context_data(self, *args, **kwargs):
-        email = self.request.session.pop("email")
+        email = self.request.session.pop("USER_EMAIL")
         context = super().get_context_data()
         context.update({"email": email})
         return context
@@ -104,6 +108,11 @@ class ResetVerifyOTP(mail_views.VerifyOTPView):
 
     def get_user_kwargs(self):
         return {"email": self.request.session.get("USER_EMAIL")}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"title": "Reset Password"})
+        return context
 
     def get_success_url(self):
         return mail_views.generate_uidb64_url(pattern_name="users:reset-password", user=self.get_user_model())

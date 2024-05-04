@@ -8,8 +8,9 @@ reset_urlpatterns = [
     # path -
     # using otp to verify and redirect to reset password
 
+    path('password/forgot/', views.GetEmailView.as_view(), name='password-forgot'),
     # redirect user to give their registered email and redirect to chosen path (otp/link)
-    path('password/forgot/', views.RedirectUserView.as_view(), name='password-forgot'),
+    path('password/forgot/redirect/', views.RedirectUserView.as_view(), name='reset-password-redirect'),
 
     # forgot password link method
     # send a email with password reset link

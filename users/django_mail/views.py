@@ -30,9 +30,6 @@ class SendEmailView(SendEmailMixin, View):
     """
     success_url = None
 
-    def get_email_context_data(self):
-        pass
-
     def get_success_url(self):
         if self.success_url:
             return self.success_url
@@ -92,9 +89,8 @@ class VerifyOTPView(FormMixin, generic.TemplateView):
     def get_user_model(self):
         return get_object_or_404(get_user_model(), **self.get_user_kwargs())
 
-    def get_otp_model(self):
-        user = self.get_user_model()
-        return get_object_or_404(self.get_model(), user=user)
+    def get_otp_model(self, otp_number):
+        return get_object_or_404(self.get_model(), otp=otp_number)
 
     def get_model(self):
         if self.model is None:
@@ -103,13 +99,14 @@ class VerifyOTPView(FormMixin, generic.TemplateView):
 
     def form_valid(self, form):
         if self.get_model().objects.filter(user=self.get_user_model()):
-            otp_model = self.get_otp_model()
             otp_number = form.cleaned_data.get("otp")
-            if otp_number == otp_model.otp:
-                otp_model.delete()
-                if otp_model.is_expired():
-                    form.add_error("otp", "OTP is expired")
-                    return self.render_to_response(self.get_context_data(form=form))
-                return redirect(self.get_success_url())
+            otp_model = self.get_otp_model(otp_number)
+            if otp_model.user.id == self.get_user_model().id:
+                if otp_number == otp_model.otp:
+                    otp_model.delete()
+                    if otp_model.is_expired():
+                        form.add_error("otp", "OTP is expired")
+                        return self.render_to_response(self.get_context_data(form=form))
+                    return redirect(self.get_success_url())
         form.add_error("otp", "OTP is not valid")
         return self.render_to_response(self.get_context_data(form=form))

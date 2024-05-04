@@ -24,6 +24,9 @@ class User(AbstractUser):
     def is_email_verified(self):
         return self.email_verified
 
+    def is_member(self, role):
+        return self.role == role
+
 
 class OTPModel(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

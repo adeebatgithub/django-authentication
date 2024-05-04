@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.http import urlsafe_base64_decode
 from django.views import generic, View
+from braces.views import LoginRequiredMixin
 
 from users.django_mail import views as mail_views
 from users.models import OTPModel
@@ -41,7 +41,7 @@ class VerificationSendLinkMail(LoginRequiredMixin, mail_views.SendEmailView):
 
     def get_email_context_data(self):
         url = mail_views.generate_uidb64_url(
-            pattern_name="users:verification-link",
+            pattern_name="users:verification-account-link",
             user=self.request.user,
             absolute=True,
             request=self.request
@@ -77,10 +77,10 @@ class VerificationSendOTPMail(LoginRequiredMixin, mail_views.SendEmailView):
     send an email with email verification otp
     """
     template_name = "verification/user-verify-email.html"
-    success_url = reverse_lazy("users:verification-verify-otp")
+    success_url = reverse_lazy("users:verification-account-otp")
     send_html_email = True
     email_subject = "Account Verification"
-    email_template_name = "user-verification-otp-mail.html"
+    email_template_name = "verification/user-verification-otp-mail.html"
 
     def get_to_email(self):
         return self.request.user.email
@@ -101,6 +101,11 @@ class VerifyAccountOTP(LoginRequiredMixin, mail_views.VerifyOTPView):
     def get_user_model(self):
         return self.request.user
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"title": "Account Verification"})
+        return context
+
 
 class VerificationUpdateStatus(LoginRequiredMixin, View):
     """
@@ -118,14 +123,13 @@ class VerificationUpdateStatus(LoginRequiredMixin, View):
         return redirect(self.get_success_url())
 
 
-class MailSendDoneView(generic.TemplateView):
+class MailSendDoneView(LoginRequiredMixin, generic.TemplateView):
     """
     render a template after successfully sending email with success message
     """
     template_name = "common/mail-send-done.html"
 
     def get_context_data(self, *args, **kwargs):
-        email = self.request.session.pop("email")
         context = super().get_context_data()
-        context.update({"email": email})
+        context.update({"email": self.request.user.email})
         return context

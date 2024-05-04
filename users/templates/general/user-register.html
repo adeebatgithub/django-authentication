@@ -1,5 +1,5 @@
 {% extends "common/user-base.html" %}
-{% block title %} Sign up {% endblock %}
+{% block title %} Register {% endblock %}
 {% block content %}
 <div class="signinform">
     <h1>django-authentication</h1>
@@ -8,13 +8,13 @@
         <!-- main content -->
         <div class="w3l-form-info">
             <div class="w3_info">
-                <h2>Sign up</h2>
+                <h2>Register</h2>
                 <form method="post">
 					{% csrf_token %}
                     {% include "common/user-form.html" with form=form %}
-                    <button class="btn btn-primary btn-block" type="submit">Sign up</button>
+                    <button class="btn btn-primary btn-block" type="submit">Register</button>
                 </form>
-                <p class="continue"><span>or Login with</span></p>
+                <p class="continue"><span>or register with</span></p>
                 <div class="social-login">
                     <a href="#google">
                         <div class="google">

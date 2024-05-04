@@ -30,6 +30,10 @@ class LoginView(auth_views.LoginView):
     def get_redirect_url(self):
         return reverse_lazy(self.pattern_name)
 
+    def form_invalid(self, form):
+        print(form.errors)
+        return super().form_invalid(form)
+
 
 class RedirectUserView(base_views.RedirectUserView):
     """
@@ -46,6 +50,14 @@ class LogoutView(auth_views.LogoutView):
     redirect user to login page
     """
     next_page = "users:login"
+    http_method_names = ["get", "post", "put"]
+    success_url = reverse_lazy("users:login")
+
+    def get_success_url(self):
+        return self.success_url
+
+    def get(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 
 class RegisterView(generic.CreateView):

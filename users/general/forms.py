@@ -8,6 +8,8 @@ class UserLoginForm(auth_forms.AuthenticationForm):
         self.fields["username"].widget.attrs["placeholder"] = "Username"
         self.fields["password"].widget.attrs["placeholder"] = "Password"
 
+        self.error_messages["invalid_login"] = "Invalid username or password."
+
     class Meta:
         model = get_user_model()
         fields = ['username', 'password']
