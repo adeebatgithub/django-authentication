@@ -2,7 +2,7 @@ from django.urls import path
 
 from . import views
 
-urlpatterns = [
+role_urlpatterns = [
     # change the role and grouo of an user
     # an email will pass to the settings.EMAIL_HOST_USER to verify and change role
     path('change/role/send-mail/<role>/', views.RoleSendChangeMail.as_view(), name='role-send-mail'),

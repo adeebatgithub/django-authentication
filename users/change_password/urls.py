@@ -2,10 +2,10 @@ from django.urls import path
 
 from . import views
 
-urlpatterns = [
+change_urlpatterns = [
     # password change
     # two methods
-    # using an url for changing password
+    #
     # path -
     # using otp to verify and redirect to change password
     # path -
