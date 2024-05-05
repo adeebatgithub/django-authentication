@@ -1,6 +1,7 @@
 {% extends "common/user-base.html" %}
 {% block title %} Login {% endblock %}
 {% block content %}
+{% load socialaccount %}
 <div class="signinform">
     <h1>django-authentication</h1>
     <!-- container -->
@@ -23,7 +24,7 @@
                 </form>
                 <p class="continue"><span>or Login with</span></p>
                 <div class="social-login">
-                    <a href="#google">
+                    <a href="{% provider_login_url 'google' %}">
                         <div class="google">
                             <span class="fab fa-google" aria-hidden="true"></span>
                         </div>
