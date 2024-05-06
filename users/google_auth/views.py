@@ -2,9 +2,12 @@ import os
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
-from django.views import View
+from django.views import View, generic
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
+from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, login
+from django.shortcuts import get_object_or_404
 
 # Replace the client ID and client secret below with your own
 CLIENT_ID = '1043779874380-pl4ultosv6ciig2pqv952jj8pftcl0b6.apps.googleusercontent.com'
@@ -30,6 +33,7 @@ def get_flow(state=None):
         state=state
     )
 
+
 class GoogleLogin(View):
 
     def get(self, request):
@@ -40,28 +44,55 @@ class GoogleLogin(View):
 
         # Save the state so we can verify the request later
         request.session['state'] = state
+        print(state)
         return redirect(authorization_url)
 
 
 class GoogleCallback(View):
 
+    def get_user_info(self):
+        flow = get_flow(state=self.request.GET.get('state'))
+        authorization_response = self.request.build_absolute_uri()
+        flow.fetch_token(authorization_response=authorization_response)
+        credentials = flow.credentials
+        user_info_service = build('oauth2', 'v2', credentials=credentials)
+        return user_info_service.userinfo().get().execute()
+
     def get(self, request, **kwargs):
-        # Verify the request state
         if request.GET.get('state') != request.session['state']:
             raise Exception('Invalid state')
+        user_info = self.get_user_info()
+        request.session['user_info'] = user_info
+        request.session['code'] = request.GET.get('code')
+        return redirect(reverse_lazy("users:google-redirect"))
 
-        # Create the OAuth flow object
-        flow = get_flow(state=request.GET.get('state'))
 
-        # Exchange the authorization code for an access token
-        authorization_response = request.build_absolute_uri()
-        flow.fetch_token(authorization_response=authorization_response)
+class GoogleRedirect(View):
 
-        # Save the credentials to the session
-        credentials = flow.credentials
+    def user_exists(self, **kwargs):
+        return get_user_model().objects.filter(**kwargs).exists()
 
-        user_info_service = build('oauth2', 'v2', credentials=credentials)
-        user_info = user_info_service.userinfo().get().execute()
+    def get_user(self, **kwargs):
+        return get_object_or_404(get_user_model(), **kwargs)
+
+    def login_user(self, code):
+        user = self.get_user()
+        auth = authenticate(se)
+        if auth:
+            login(self.request, auth)
+            return redirect(reverse_lazy('users:redirect-user'))
+
+    def register_user(self, user_info):
+        data = {
+            'email': user_info['email'],
+            'username': user_info['name'],
+        }
+        user = get_user_model().objects.create_user(**data)
+
+    def get(self, request, **kwargs):
+        user_info = request.session['user_info']
         print(user_info)
-
-        return redirect(reverse_lazy("users:redirect-user"))
+        if self.user_exists(username=user_info['name']):
+            self.login_user()
+        else:
+            self.register_user(user_info)
