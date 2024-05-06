@@ -1,35 +1,25 @@
 import os
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth import login
+from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect
+from django.urls import reverse_lazy
+from django.views import View
+from django.conf import settings
+from django.http import HttpResponseServerError
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
-from django.views import View, generic
-from django.urls import reverse_lazy
-from django.shortcuts import redirect
-from django.contrib.auth import get_user_model
-from django.contrib.auth import authenticate, login
-from django.shortcuts import get_object_or_404
-
-# Replace the client ID and client secret below with your own
-CLIENT_ID = '1043779874380-pl4ultosv6ciig2pqv952jj8pftcl0b6.apps.googleusercontent.com'
-CLIENT_SECRET_file = 'users/google_auth/client_secret.json'
-SCOPES = [
-    "openid",
-    "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/userinfo.profile",
-]
-REDIRECT_URI = 'http://127.0.0.1:8000/accounts/google/login/callback/'
-
-# The authorization URL and redirect URL must match the ones you specified when you created the OAuth client ID
-AUTH_URL = 'https://accounts.google.com/o/oauth2/auth'
-
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+if settings.DEBUG:
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 
 def get_flow(state=None):
     return Flow.from_client_secrets_file(
-        CLIENT_SECRET_file,
-        scopes=SCOPES,
-        redirect_uri=REDIRECT_URI,
+        settings.GOODLE_AUTH.get("client_secret_file"),
+        scopes=settings.GOODLE_AUTH.get("scopes"),
+        redirect_uri=settings.GOODLE_AUTH.get("redirect_uri"),
         state=state
     )
 
@@ -39,19 +29,16 @@ class GoogleLogin(View):
     def get(self, request):
         flow = get_flow()
         authorization_url, state = flow.authorization_url(
-            access_type='offline',
+            access_type=settings.GOODLE_AUTH.get("access_type"),
             prompt='select_account')
-
-        # Save the state so we can verify the request later
-        request.session['state'] = state
-        print(state)
+        request.session['GOOGLE_AUTH_STATE'] = state
         return redirect(authorization_url)
 
 
 class GoogleCallback(View):
 
     def get_user_info(self):
-        flow = get_flow(state=self.request.GET.get('state'))
+        flow = get_flow(state=self.request.GET.pop('GOOGLE_AUTH_STATE'))
         authorization_response = self.request.build_absolute_uri()
         flow.fetch_token(authorization_response=authorization_response)
         credentials = flow.credentials
@@ -59,28 +46,27 @@ class GoogleCallback(View):
         return user_info_service.userinfo().get().execute()
 
     def get(self, request, **kwargs):
-        if request.GET.get('state') != request.session['state']:
-            raise Exception('Invalid state')
+        if request.GET.get('state') != request.session['GOOGLE_AUTH_STATE']:
+            raise HttpResponseServerError("Invalid google auth state")
+
         user_info = self.get_user_info()
-        request.session['user_info'] = user_info
-        request.session['code'] = request.GET.get('code')
+        request.session['GOOGLE_AUTH_USER_INFO'] = user_info
         return redirect(reverse_lazy("users:google-redirect"))
 
 
 class GoogleRedirect(View):
+    model = get_user_model()
+    template_name = 'general/user-login.html'
 
     def user_exists(self, **kwargs):
-        return get_user_model().objects.filter(**kwargs).exists()
+        return self.model.objects.filter(**kwargs).exists()
 
     def get_user(self, **kwargs):
-        return get_object_or_404(get_user_model(), **kwargs)
+        return get_object_or_404(self.model, **kwargs)
 
-    def login_user(self, code):
-        user = self.get_user()
-        auth = authenticate(se)
-        if auth:
-            login(self.request, auth)
-            return redirect(reverse_lazy('users:redirect-user'))
+    def login_user(self, user):
+        login(self.request, user)
+        return redirect(reverse_lazy('users:redirect-user'))
 
     def register_user(self, user_info):
         data = {
@@ -88,11 +74,12 @@ class GoogleRedirect(View):
             'username': user_info['name'],
         }
         user = get_user_model().objects.create_user(**data)
+        return self.login_user(user)
 
     def get(self, request, **kwargs):
-        user_info = request.session['user_info']
-        print(user_info)
-        if self.user_exists(username=user_info['name']):
-            self.login_user()
+        user_info = request.session.pop('GOOGLE_AUTH_USER_INFO')
+        if self.user_exists(email=user_info.get('email')):
+            user = self.get_user(email=user_info.get("email"))
+            return self.login_user(user)
         else:
-            self.register_user(user_info)
+            return self.register_user(user_info)

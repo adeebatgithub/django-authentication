@@ -11,7 +11,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+
+import django.contrib.auth.models
 import environ
+
+import users.models
 
 env = environ.Env()
 environ.Env.read_env()
@@ -33,10 +37,7 @@ ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'users.User'
 
-SITE_ID = 1
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -44,8 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    'django.contrib.sites',
 
     'users.apps.UsersConfig',
 ]
@@ -138,9 +137,26 @@ LOGIN_URL = "users:login"
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-# EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
 
 OTP_LENGTH = 6
 OTP_EXPIRY = 30
+
+DEFAULT_USER_ROLE = users.models.User.EXAMPLE_ROLE
+DEFAULT_USER_GROUP_NAME = 'example'
+
+BASE_URI = 'http://127.0.0.1:8000'
+
+GOOGLE_AUTH = {
+    'client_id': env('GOOGLE_CLIENT_ID'),
+    'client_secret_file': env('GOOGLE_CLIENT_SECRET'),
+    'redirect_uri': f'{BASE_URI}/accounts/google/login/callback/',
+    "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile",
+    ],
+    "access_type": 'offline',
+}
