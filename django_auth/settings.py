@@ -11,11 +11,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-
-import django.contrib.auth.models
 import environ
+import os
 
-import users.models
 
 env = environ.Env()
 environ.Env.read_env()
@@ -133,6 +131,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "users:redirect-user"
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -144,15 +143,16 @@ EMAIL_USE_TLS = True
 OTP_LENGTH = 6
 OTP_EXPIRY = 30
 
-DEFAULT_USER_ROLE = users.models.User.EXAMPLE_ROLE
+DEFAULT_USER_ROLE = 'EXAMPLE_ROLE'
 DEFAULT_USER_GROUP_NAME = 'example'
 
-BASE_URI = 'http://127.0.0.1:8000'
+if DEBUG:
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 GOOGLE_AUTH = {
     'client_id': env('GOOGLE_CLIENT_ID'),
-    'client_secret_file': env('GOOGLE_CLIENT_SECRET'),
-    'redirect_uri': f'{BASE_URI}/accounts/google/login/callback/',
+    'client_secret_file': 'users/google_auth/client_secret.json',
+    'redirect_uri': f'http://127.0.0.1:8000/accounts/google/login/callback/',
     "scopes": [
         "openid",
         "https://www.googleapis.com/auth/userinfo.email",

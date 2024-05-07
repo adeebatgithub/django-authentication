@@ -24,8 +24,12 @@ class User(AbstractUser):
     def is_email_verified(self):
         return self.email_verified
 
-    def is_member(self, role):
+    def has_role(self, role):
         return self.role == role
+
+    def get_role(self):
+        role = [r for r in self.ROLES if r[0] == self.role][0]
+        return role
 
 
 class OTPModel(models.Model):

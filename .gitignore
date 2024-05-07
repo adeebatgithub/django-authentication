@@ -9,3 +9,5 @@ users/email_verification/__pycache__/
 users/general/__pycache__/
 users/reset_password/__pycache__/
 users/role_change/__pycache__/
+users/google_auth/__pycache__/
+users/google_auth/client_secret.json
