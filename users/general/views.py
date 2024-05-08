@@ -163,3 +163,14 @@ class DeleteUser(LoginRequiredMixin, generic.DeleteView):
 
     def get(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
+
+
+class ChangeUsername(LoginRequiredMixin, generic.UpdateView):
+    model = get_user_model()
+    template_name = "general/user-update.html"
+    form_class = forms.ChangeUsernameForm
+    slug_field = "username"
+    slug_url_kwarg = "username"
+
+    def get_success_url(self):
+        return reverse_lazy("users:user-profile", kwargs={"username": self.object.username})

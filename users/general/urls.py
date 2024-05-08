@@ -22,6 +22,7 @@ urlpatterns = [
     # user deletion
     # send confirmation mail
     path('delete/send-mail/', views.DeleteUserSendMail.as_view(), name='delete-send-mail'),
+    # success message
     path('delete/send-mail/done/', views.MailSendDoneView.as_view(), name='delete-mail-done'),
     # delete confirmation page
     path('delete/confirm/', views.DeleteUserConfirmation.as_view(), name='delete-user-confirm'),
@@ -29,5 +30,9 @@ urlpatterns = [
     path('delete/decline/', views.DeleteUseDecline.as_view(), name='delete-user-decline'),
     # delete confirmed
     path('delete/confirm/<username>', views.DeleteUser.as_view(), name='delete-user'),
+
+    # user update
+    # change username
+    path('username/<username>', views.ChangeUsername.as_view(), name='change-username'),
 
 ]

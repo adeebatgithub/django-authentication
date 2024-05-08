@@ -4,10 +4,15 @@
 {% endblock %}
 {% block content %}
 	<div class="signinform">
+        {% if not user.has_usable_password %}
+        	<p>Your are not set a password set password <a href="#">here</a></p>
+        {% endif %} 
         <div class="container">
-            <div>
-                User name : {{ user.username }}
-            </div>
+            <a href="{% url 'users:change-username' username=user.username %}">
+                <div>
+                    User name : {{ user.username }}
+                </div>
+            </a>
             <div>
                 Full name : {{ user.first_name }} {{ user.last_name }}
             </div>

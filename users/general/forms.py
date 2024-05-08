@@ -27,3 +27,15 @@ class UserRegistrationForm(auth_forms.UserCreationForm):
     class Meta:
         model = get_user_model()
         fields = ("username", "email", "password1", "password2")
+
+
+class ChangeUsernameForm(auth_forms.UserChangeForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].widget.attrs["placeholder"] = "Username"
+
+    class Meta:
+        model = get_user_model()
+        fields = ("username",)
+        field_classes = {"username": auth_forms.UsernameField}
