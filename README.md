@@ -26,7 +26,6 @@ add these
 setting.py
 
 ```angular2html
-
 INSTALLED_APPS = [
     ...
 

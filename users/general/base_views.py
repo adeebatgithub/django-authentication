@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View, generic
+from django.conf import settings
 
 
 class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
@@ -74,6 +75,10 @@ class AddRole(View):
     def get_role(self):
         if self.role:
             return self.role
+
+        if settings.DEFAULT_USER_ROLE:
+            return getattr(get_user_model(), settings.DEFAULT_USER_ROLE)
+
         raise ImproperlyConfigured(f"{self.__class__.__name__} need a 'role'")
 
     def get_success_url(self):
@@ -103,6 +108,9 @@ class AddToGroup(View):
     def get_group_model(self):
         if self.group_name:
             return get_object_or_404(self.model, name=self.group_name)
+
+        if settings.DEFAULT_USER_GROUP_NAME:
+            return get_object_or_404(self.model, name=settings.DEFAULT_USER_GROUP_NAME)
         raise ImproperlyConfigured(f"AddToGroup needs either a definition of 'group_name'")
 
     def get_success_url(self):
