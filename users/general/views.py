@@ -165,12 +165,29 @@ class DeleteUser(LoginRequiredMixin, generic.DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class ChangeUsername(LoginRequiredMixin, generic.UpdateView):
+class UpdateUser(LoginRequiredMixin, generic.UpdateView):
     model = get_user_model()
     template_name = "general/user-update.html"
-    form_class = forms.ChangeUsernameForm
     slug_field = "username"
     slug_url_kwarg = "username"
+    title = None
 
     def get_success_url(self):
-        return reverse_lazy("users:user-profile", kwargs={"username": self.object.username})
+        return reverse_lazy("users:profile", kwargs={"username": self.object.username})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "title": self.title
+        })
+        return context
+
+
+class ChangeUsername(UpdateUser):
+    form_class = forms.ChangeUsernameForm
+    title = "Username"
+
+
+class ChangeFullname(UpdateUser):
+    form_class = forms.ChangeFullnameForm
+    title = "Fullname"

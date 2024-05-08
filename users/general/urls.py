@@ -34,5 +34,7 @@ urlpatterns = [
     # user update
     # change username
     path('username/<username>', views.ChangeUsername.as_view(), name='change-username'),
+    # change fullname
+    path('fullname/<username>', views.ChangeFullname.as_view(), name='change-fullname'),
 
 ]

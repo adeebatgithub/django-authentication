@@ -39,3 +39,15 @@ class ChangeUsernameForm(auth_forms.UserChangeForm):
         model = get_user_model()
         fields = ("username",)
         field_classes = {"username": auth_forms.UsernameField}
+
+
+class ChangeFullnameForm(auth_forms.UserChangeForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["first_name"].widget.attrs["placeholder"] = "First Name"
+        self.fields["last_name"].widget.attrs["placeholder"] = "Last Name"
+
+    class Meta:
+        model = get_user_model()
+        fields = ("first_name", "last_name")

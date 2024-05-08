@@ -13,9 +13,11 @@
                     User name : {{ user.username }}
                 </div>
             </a>
-            <div>
-                Full name : {{ user.first_name }} {{ user.last_name }}
-            </div>
+            <a href="{% url 'users:change-fullname' username=user.username %}">
+                <div>
+                    Full name : {{ user.first_name }} {{ user.last_name }}
+                </div>
+            </a>
             <div {% if not user.email_verified %} style="color: red" {% endif %}>
 				Email : {{ user.email }}
                 {% if not user.email %}
