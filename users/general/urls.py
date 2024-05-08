@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 
-general_urlpatterns = [
+urlpatterns = [
     # redirect user based on authentication and authorisation
     path('', views.RedirectUserView.as_view(), name="redirect-user"),
     # profile page
