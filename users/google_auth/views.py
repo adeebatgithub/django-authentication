@@ -1,15 +1,12 @@
-import os
-from importlib import import_module
-
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login
 from django.contrib.auth.models import Group
+from django.http import HttpResponseServerError
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.conf import settings
-from django.http import HttpResponseServerError
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
