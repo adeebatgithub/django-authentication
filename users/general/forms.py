@@ -1,4 +1,5 @@
 from django.contrib.auth import forms as auth_forms, get_user_model
+from django import forms
 
 
 class UserLoginForm(auth_forms.AuthenticationForm):
@@ -29,7 +30,7 @@ class UserRegistrationForm(auth_forms.UserCreationForm):
         fields = ("username", "email", "password1", "password2")
 
 
-class ChangeUsernameForm(auth_forms.UserChangeForm):
+class ChangeUsernameForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -41,7 +42,7 @@ class ChangeUsernameForm(auth_forms.UserChangeForm):
         field_classes = {"username": auth_forms.UsernameField}
 
 
-class ChangeFullnameForm(auth_forms.UserChangeForm):
+class ChangeFullnameForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -51,3 +52,14 @@ class ChangeFullnameForm(auth_forms.UserChangeForm):
     class Meta:
         model = get_user_model()
         fields = ("first_name", "last_name")
+
+
+class ChangeEmailForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["email"].widget.attrs["placeholder"] = "Email"
+
+    class Meta:
+        model = get_user_model()
+        fields = ("email",)

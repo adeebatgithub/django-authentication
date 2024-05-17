@@ -72,8 +72,6 @@ GOOGLE_AUTH = {
 }
 ```
 
-crate a .env file with email information
-
 urls.py
 
 ```commandline

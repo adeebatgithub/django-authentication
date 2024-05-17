@@ -82,7 +82,7 @@ class AddExampleRole(base_views.AddRole):
     give users  the specified role
     role is specified in settings.DEFAULT_USER_ROLE
     """
-    pass
+    success_url = reverse_lazy("users:add-to-example-group")
 
 
 class AddToExampleGroup(base_views.AddToGroup):
@@ -90,8 +90,7 @@ class AddToExampleGroup(base_views.AddToGroup):
     add users to the specified group
     group name is specified in settings.DEFAULT_USER_GROUP_NAME
     """
-    pass
-
+    success_url = reverse_lazy("users:redirect-user")
 
 class DeleteUserSendMail(LoginRequiredMixin, mail_views.SendEmailView):
     """
@@ -165,29 +164,26 @@ class DeleteUser(LoginRequiredMixin, generic.DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class UpdateUser(LoginRequiredMixin, generic.UpdateView):
-    model = get_user_model()
-    template_name = "general/user-update.html"
-    slug_field = "username"
-    slug_url_kwarg = "username"
-    title = None
-
-    def get_success_url(self):
-        return reverse_lazy("users:profile", kwargs={"username": self.object.username})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            "title": self.title
-        })
-        return context
-
-
-class ChangeUsername(UpdateUser):
+class ChangeUsername(base_views.UpdateUser):
     form_class = forms.ChangeUsernameForm
     title = "Username"
 
 
-class ChangeFullname(UpdateUser):
+class ChangeFullname(base_views.UpdateUser):
     form_class = forms.ChangeFullnameForm
     title = "Fullname"
+
+
+class ChangeEmail(base_views.UpdateUser):
+    form_class = forms.ChangeEmailForm
+    title = "Email"
+
+    def change_email_status(self):
+        model = self.object
+        model.email_verified = False
+        model.save()
+        return model
+
+    def get_success_url(self):
+        self.change_email_status()
+        return super().get_success_url()

@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse_lazy
 from django.views import View, generic
 from django.conf import settings
 
@@ -128,3 +129,21 @@ class AddToGroup(View):
         user = self.get_user_model(id=user_id)
         user.groups.add(group)
         return redirect(self.get_success_url())
+
+
+class UpdateUser(LoginRequiredMixin, generic.UpdateView):
+    model = get_user_model()
+    template_name = "general/user-update.html"
+    slug_field = "username"
+    slug_url_kwarg = "username"
+    title = None
+
+    def get_success_url(self):
+        return reverse_lazy("users:profile", kwargs={"username": self.object.username})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "title": self.title
+        })
+        return context

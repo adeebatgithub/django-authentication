@@ -19,7 +19,9 @@
                 </div>
             </a>
             <div {% if not user.email_verified %} style="color: red" {% endif %}>
-				Email : {{ user.email }}
+                <a href="{% url 'users:change-email' username=user.username %}">
+                    Email : {{ user.email }}
+                </a>
                 {% if not user.email %}
                     <a href="">add email</a>
                 {% else %}
