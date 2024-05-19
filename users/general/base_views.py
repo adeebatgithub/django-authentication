@@ -99,7 +99,7 @@ class AddRole(View):
 
 class AddToGroup(View):
     """
-    base implementation of adding a user to a gruop
+    base implementation of adding a user to a group
     inherit and define 'group_name' add 'success_url'
     """
     group_name = None

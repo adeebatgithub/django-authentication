@@ -1,10 +1,10 @@
+from django.contrib.auth import views as auth_views, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views import generic
-from django.contrib.auth import views as auth_views, get_user_model
 
-from . import forms, base_views
 from users.django_mail import views as mail_views
+from . import forms, base_views
 
 
 class ProfileView(LoginRequiredMixin, generic.TemplateView):
@@ -37,7 +37,7 @@ class LoginView(auth_views.LoginView):
 
 class RedirectUserView(base_views.RedirectUserView):
     """
-    Users Redirect View, redirect logged in user
+    Users Redirect View, redirect logged-in user
     """
 
     def get_pattern_name(self):
@@ -79,7 +79,7 @@ class RegisterView(generic.CreateView):
 
 class AddExampleRole(base_views.AddRole):
     """
-    give users  the specified role
+    give users the specified role
     role is specified in settings.DEFAULT_USER_ROLE
     """
     success_url = reverse_lazy("users:add-to-example-group")
@@ -91,6 +91,7 @@ class AddToExampleGroup(base_views.AddToGroup):
     group name is specified in settings.DEFAULT_USER_GROUP_NAME
     """
     success_url = reverse_lazy("users:redirect-user")
+
 
 class DeleteUserSendMail(LoginRequiredMixin, mail_views.SendEmailView):
     """

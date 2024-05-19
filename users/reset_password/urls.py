@@ -4,7 +4,7 @@ from . import views
 urlpatterns = [
     # forgot password
     # two methods
-    # using a url to reset password
+    # using an url to reset password
     # path -
     # using otp to verify and redirect to reset password
 
@@ -13,15 +13,15 @@ urlpatterns = [
     path('redirect/', views.RedirectUserView.as_view(), name='reset-password-redirect'),
 
     # forgot password link method
-    # send a email with password reset link
+    # send an email with password reset link
     path('send-mail/link/', views.ResetSendLinkMail.as_view(), name='reset-send-link-mail'),
     # redirect user to a message page
     path('send-mail/done/', views.MailSendDoneView.as_view(), name='reset-mail-send-done'),
 
     # forgot password otp method
-    # create a otp model
+    # create an otp model
     path('create/otp/', views.ResetOTPCreateView.as_view(), name='reset-create-otp'),
-    # send a email with a otp number
+    # send an email with an otp number
     path('send-mail/otp/', views.ResetSendOTPMail.as_view(), name='reset-send-otp-mail'),
     # verify otp
     path('verify-otp/', views.ResetVerifyOTP.as_view(), name='reset-otp-verify'),

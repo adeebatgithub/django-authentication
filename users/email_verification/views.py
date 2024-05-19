@@ -6,6 +6,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.views import generic, View
 
 from users.django_mail import views as mail_views
+from users.otp import views as otp_views
 from users.models import OTPModel
 from users.token import TokenValidationMixin
 
@@ -66,7 +67,7 @@ class VerifyAccountLink(TokenValidationMixin, View):
         return redirect(reverse_lazy("users:profile", kwargs={"username": user.username}))
 
 
-class VerificationOTPCreateView(LoginRequiredMixin, mail_views.OTPCreateView):
+class VerificationOTPCreateView(LoginRequiredMixin, otp_views.OTPCreateView):
     success_url = reverse_lazy("users:verification-send-mail-otp")
 
     def get_user_model(self):
@@ -91,7 +92,7 @@ class VerificationSendOTPMail(LoginRequiredMixin, mail_views.SendEmailView):
         return {"otp": otp.otp}
 
 
-class VerifyAccountOTP(LoginRequiredMixin, mail_views.VerifyOTPView):
+class VerifyAccountOTP(LoginRequiredMixin, otp_views.VerifyOTPView):
     """
     verify the otp provided by the user
     """

@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
     # email verification
     # methods
-    # using a url to verify email
+    # using an url to verify email
     # path -
     # using otp to verify email
     # path -
@@ -19,7 +19,7 @@ urlpatterns = [
     # redirect user to a message page
     path('send-mail/link/done/', views.MailSendDoneView.as_view(), name='verification-mail-send-done'),
     # verify email using link
-    path('link/<uidb64>/<token>/', views.VerifyAccountLink.as_view(),name='verification-account-link'),
+    path('link/<uidb64>/<token>/', views.VerifyAccountLink.as_view(), name='verification-account-link'),
 
     # method - otp
     # create otp

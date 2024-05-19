@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model, logout
+from django.contrib.auth import logout
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, get_object_or_404
@@ -6,8 +6,9 @@ from django.urls import reverse_lazy
 from django.views import generic, View
 
 from users.django_mail import views as mail_views
-from users.token import TokenValidationMixin
+from users.otp import views as otp_views
 from users.models import OTPModel
+from users.token import TokenValidationMixin
 from . import forms
 
 
@@ -67,7 +68,7 @@ class ChangeOTPCreateView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         user = self.get_user_model()
-        otp = OTPModel(user=user, otp=mail_views.generate_otp())
+        otp = OTPModel(user=user, otp=otp_views.generate_otp())
         otp.save()
         request.session["OTP_ID"] = otp.id
         return redirect(self.get_success_url())
@@ -86,7 +87,7 @@ class ChangeSendOTPMail(ChangeSendMail):
         return {"otp": otp_model.otp}
 
 
-class ChangeVerifyOTPView(LoginRequiredMixin, mail_views.VerifyOTPView):
+class ChangeVerifyOTPView(LoginRequiredMixin, otp_views.VerifyOTPView):
     """
     verify the otp provided by the user
     """
