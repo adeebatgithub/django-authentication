@@ -28,7 +28,7 @@ urlpatterns = [
 
     # common for both method
     # reset the password
-    path('reset/<uidb64>/<token>/', views.PasswordResetView.as_view(), name='reset-password'),
+    path('<uidb64>/<token>/', views.PasswordResetView.as_view(), name='reset-password'),
     # redirect the user
     path('done/', views.PasswordResetDoneView.as_view(), name='reset-password-done'),
 ]

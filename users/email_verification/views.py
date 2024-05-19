@@ -7,7 +7,7 @@ from django.views import generic, View
 
 from users.django_mail import views as mail_views
 from users.models import OTPModel
-from users.token import token_generator
+from users.token import TokenValidationMixin
 
 
 class RedirectUser(LoginRequiredMixin, generic.RedirectView):
@@ -50,7 +50,7 @@ class VerificationSendLinkMail(LoginRequiredMixin, mail_views.SendEmailView):
         return {"url": url}
 
 
-class VerifyAccountLink(View):
+class VerifyAccountLink(TokenValidationMixin, View):
     """
     verify the email
     """
@@ -59,23 +59,11 @@ class VerifyAccountLink(View):
         user_id = urlsafe_base64_decode(self.kwargs['uidb64'])
         return get_object_or_404(get_user_model(), id=user_id)
 
-    def token_valid(self):
+    def get(self, request, **kwargs):
         user = self.get_user_object()
         user.email_verified = True
         user.save()
         return redirect(reverse_lazy("users:profile", kwargs={"username": user.username}))
-
-    def token_invalid(self):
-        # message
-        return redirect(reverse_lazy("users:profile", kwargs={"username": self.get_user_object().username}))
-
-    def get(self, request, **kwargs):
-        token = kwargs.get("token")
-        user = self.get_user_object()
-        if token_generator.is_valid(user, token):
-            return self.token_valid()
-        else:
-            return self.token_invalid()
 
 
 class VerificationOTPCreateView(LoginRequiredMixin, mail_views.OTPCreateView):

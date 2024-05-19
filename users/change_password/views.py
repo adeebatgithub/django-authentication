@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 from django.views import generic, View
 
 from users.django_mail import views as mail_views
+from users.token import TokenValidationMixin
 from users.models import OTPModel
 from . import forms
 
@@ -103,7 +104,7 @@ class ChangeVerifyOTPView(LoginRequiredMixin, mail_views.VerifyOTPView):
         return mail_views.generate_uidb64_url(pattern_name="users:change-password", user=self.get_user_model())
 
 
-class PasswordChangeView(LoginRequiredMixin, auth_views.PasswordChangeView):
+class PasswordChangeView(LoginRequiredMixin, TokenValidationMixin, auth_views.PasswordChangeView):
     """
     change password
     """

@@ -1,4 +1,6 @@
 from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import redirect
+from django.urls import reverse_lazy
 
 from users.models import TokenModel
 
@@ -39,4 +41,22 @@ class TokenGenerator:
 
         return True
 
+
 token_generator = TokenGenerator()
+
+
+class TokenValidationMixin:
+    token_url_kwarg = 'token'
+    token_invalid_redirect_url = reverse_lazy("users:redirect-user")
+
+    def token_invalid(self):
+        # message
+        return redirect(self.token_invalid_redirect_url)
+
+    def get_user(self):
+        return self.request.user
+
+    def dispatch(self, request, *args, **kwargs):
+        if token_generator.is_valid(self.get_user(), kwargs.get(self.token_url_kwarg)):
+            return super().dispatch(request, *args, **kwargs)
+        return self.token_invalid()
