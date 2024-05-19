@@ -1,7 +1,6 @@
 import random
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import redirect, get_object_or_404
@@ -9,8 +8,10 @@ from django.urls import reverse_lazy
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.views import generic, View
+from django.conf import settings
 
 from users.models import OTPModel
+from users.token import token_generator
 from .forms import EmailForm, OTPForm
 from .mixins import SendEmailMixin, FormMixin
 
@@ -44,7 +45,7 @@ class SendEmailView(SendEmailMixin, View):
 
 def generate_uidb64_url(pattern_name, user, absolute=False, request=None, **kwargs):
     uidb64 = urlsafe_base64_encode(force_bytes(user.id))
-    token = default_token_generator.make_token(user)
+    token = token_generator.make_token(user)
     url = reverse_lazy(pattern_name, kwargs={"uidb64": uidb64, "token": token, **kwargs})
     if absolute:
         return request.build_absolute_uri(url)
@@ -52,7 +53,9 @@ def generate_uidb64_url(pattern_name, user, absolute=False, request=None, **kwar
 
 
 def generate_otp():
-    return random.randint(100000, 999999)
+    min_ = "1" + ("0" * (settings.OTP_LENGTH - 1))
+    max_ = "9" * settings.OTP_LENGTH
+    return random.randint(min_, max_)
 
 
 class OTPCreateView(View):

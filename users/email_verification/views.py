@@ -1,12 +1,13 @@
+from braces.views import LoginRequiredMixin
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.http import urlsafe_base64_decode
 from django.views import generic, View
-from braces.views import LoginRequiredMixin
 
 from users.django_mail import views as mail_views
 from users.models import OTPModel
+from users.token import token_generator
 
 
 class RedirectUser(LoginRequiredMixin, generic.RedirectView):
@@ -58,11 +59,23 @@ class VerifyAccountLink(View):
         user_id = urlsafe_base64_decode(self.kwargs['uidb64'])
         return get_object_or_404(get_user_model(), id=user_id)
 
-    def get(self, request, **kwargs):
+    def token_valid(self):
         user = self.get_user_object()
         user.email_verified = True
         user.save()
         return redirect(reverse_lazy("users:profile", kwargs={"username": user.username}))
+
+    def token_invalid(self):
+        # message
+        return redirect(reverse_lazy("users:profile", kwargs={"username": self.get_user_object().username}))
+
+    def get(self, request, **kwargs):
+        token = kwargs.get("token")
+        user = self.get_user_object()
+        if token_generator.is_valid(user, token):
+            return self.token_valid()
+        else:
+            return self.token_invalid()
 
 
 class VerificationOTPCreateView(LoginRequiredMixin, mail_views.OTPCreateView):

@@ -1,8 +1,9 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.conf import settings
-from django.utils import timezone
 import datetime
+
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -17,7 +18,7 @@ class User(AbstractUser):
         (STAFF, "staff"),
         (EXAMPLE_ROLE, "example role"),
     )
-    
+
     role = models.PositiveSmallIntegerField(choices=ROLES, null=True, blank=True)
     email_verified = models.BooleanField(default=False, null=True)
 
@@ -47,4 +48,22 @@ class OTPModel(models.Model):
         super(OTPModel, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.username} | {self.is_expired()}"
+        return f"{self.otp} | {self.is_expired()}"
+
+
+class TokenModel(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True)
+    expires = models.DateTimeField(null=True, blank=True)
+
+    def is_expired(self):
+        return timezone.now() > self.expires
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.expires = timezone.now() + datetime.timedelta(minutes=settings.OTP_EXPIRY)
+        super(TokenModel, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.token} | {self.is_expired()}"
