@@ -1,4 +1,6 @@
 {% if form.non_field_errors %}
+    {% load static %}
+    <script src="{% static '/js/validators/usernamevalidator.js' %}"></script>
     <div>
     {% for error in form.non_field_errors %}
         <span class="invalid-feedback {% if error %}d-block{% endif %}">{{ error }}</span>
@@ -7,7 +9,11 @@
 {% endif %}
 {% for field in form %}
     <div class="input-group">
+        {% if field.label.lower == "username" %}
         <span><i class="fas fa-user" aria-hidden="true"></i></span>
+        {% elif field.label.lower == "password" %}
+        <span><i class="fas fa-key" aria-hidden="true"></i></span>
+        {% endif %}
         {{ field }}
         {% if field.errors %}
             {% for error in field.errors %}
@@ -15,5 +21,6 @@
             {% endfor %}
         {% endif %}
     </div>
+    <div id="validator-message" style="display: None;"></div>
 {% endfor %}
 
