@@ -3,6 +3,7 @@ const PASSWORD_FEEDBACK_ID = "password-message"
 const CONFIRM_PASSWORD_ID = "id_password2"
 const CONFIRM_PASSWORD_FEEDBACK_ID = "password confirmation-message"
 
+
 function validatePassword(password) {
     let errorMessages = []
     const patterns = {
