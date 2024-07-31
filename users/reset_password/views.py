@@ -3,8 +3,11 @@ from django.contrib.auth import views as auth_views
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import generic, View
+from django.utils.http import urlsafe_base64_decode
 
 from users.django_mail import views as mail_views
+from users.otp import views as otp_views
+from users.token import TokenValidationMixin
 from users.models import OTPModel
 from . import forms
 
@@ -69,7 +72,7 @@ class ResetOTPCreateView(View):
 
     def get(self, request, *args, **kwargs):
         user = self.get_user_model()
-        otp = OTPModel(user=user, otp=mail_views.generate_otp())
+        otp = OTPModel(user=user, otp=otp_views.generate_otp())
         otp.save()
         request.session["OTP_ID"] = otp.id
         return redirect(self.get_success_url())
@@ -100,7 +103,7 @@ class MailSendDoneView(generic.TemplateView):
         return context
 
 
-class ResetVerifyOTP(mail_views.VerifyOTPView):
+class ResetVerifyOTP(otp_views.VerifyOTPView):
     """
     verify the otp that is provided by the user
     """
@@ -118,13 +121,17 @@ class ResetVerifyOTP(mail_views.VerifyOTPView):
         return mail_views.generate_uidb64_url(pattern_name="users:reset-password", user=self.get_user_model())
 
 
-class PasswordResetView(auth_views.PasswordResetConfirmView):
+class PasswordResetView(TokenValidationMixin, auth_views.PasswordResetConfirmView):
     """
     password reset
     """
     form_class = forms.PasswordResetForm
     success_url = reverse_lazy("users:reset-password-done")
     template_name = "password-forgot/user-password-reset.html"
+
+    def get_user(self):
+        user_id = urlsafe_base64_decode(self.kwargs['uidb64'])
+        return get_object_or_404(get_user_model(), id=user_id)
 
 
 class PasswordResetDoneView(generic.TemplateView):

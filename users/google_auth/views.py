@@ -89,7 +89,7 @@ class GoogleRedirect(View):
         first_name, last_name = self.get_names(user_info.get("name"))
         data = {
             "email": user_info.get("email"),
-            "username": user_info.get("given_name"),
+            "username": user_info.get("email"),
             "first_name": first_name,
             "last_name": last_name,
         }

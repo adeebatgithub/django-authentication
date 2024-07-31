@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import User, OTPModel
+from . import models
 
-admin.site.register(User)
-admin.site.register(OTPModel)
+admin.site.register(models.User)
+admin.site.register(models.OTPModel)
+admin.site.register(models.TokenModel)

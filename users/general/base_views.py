@@ -3,7 +3,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse_lazy
 from django.views import View, generic
+from django.conf import settings
 
 
 class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
@@ -74,6 +76,10 @@ class AddRole(View):
     def get_role(self):
         if self.role:
             return self.role
+
+        if settings.DEFAULT_USER_ROLE:
+            return getattr(get_user_model(), settings.DEFAULT_USER_ROLE)
+
         raise ImproperlyConfigured(f"{self.__class__.__name__} need a 'role'")
 
     def get_success_url(self):
@@ -93,7 +99,7 @@ class AddRole(View):
 
 class AddToGroup(View):
     """
-    base implementation of adding a user to a gruop
+    base implementation of adding a user to a group
     inherit and define 'group_name' add 'success_url'
     """
     group_name = None
@@ -103,6 +109,9 @@ class AddToGroup(View):
     def get_group_model(self):
         if self.group_name:
             return get_object_or_404(self.model, name=self.group_name)
+
+        if settings.DEFAULT_USER_GROUP_NAME:
+            return get_object_or_404(self.model, name=settings.DEFAULT_USER_GROUP_NAME)
         raise ImproperlyConfigured(f"AddToGroup needs either a definition of 'group_name'")
 
     def get_success_url(self):
@@ -120,3 +129,21 @@ class AddToGroup(View):
         user = self.get_user_model(id=user_id)
         user.groups.add(group)
         return redirect(self.get_success_url())
+
+
+class UpdateUser(LoginRequiredMixin, generic.UpdateView):
+    model = get_user_model()
+    template_name = "general/user-update.html"
+    slug_field = "username"
+    slug_url_kwarg = "username"
+    title = None
+
+    def get_success_url(self):
+        return reverse_lazy("users:profile", kwargs={"username": self.object.username})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "title": self.title
+        })
+        return context

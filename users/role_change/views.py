@@ -25,7 +25,9 @@ class RoleSendChangeMail(LoginRequiredMixin, SendEmailView):
         return self.request.user.email
 
     def get_email_context_data(self):
-        url = reverse_lazy("users:role-change-confirm", kwargs={"username": self.request.user.username, "role": self.kwargs.get("role")})
+        url = reverse_lazy(
+            "users:role-change-confirm",
+            kwargs={"username": self.request.user.username, "role": self.kwargs.get("role")})
         absolute_url = self.request.build_absolute_uri(url)
         return {
             "username": self.request.user.username,

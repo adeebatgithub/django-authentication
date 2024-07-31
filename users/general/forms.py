@@ -1,4 +1,5 @@
 from django.contrib.auth import forms as auth_forms, get_user_model
+from django import forms
 
 
 class UserLoginForm(auth_forms.AuthenticationForm):
@@ -27,3 +28,38 @@ class UserRegistrationForm(auth_forms.UserCreationForm):
     class Meta:
         model = get_user_model()
         fields = ("username", "email", "password1", "password2")
+
+
+class ChangeUsernameForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].widget.attrs["placeholder"] = "Username"
+
+    class Meta:
+        model = get_user_model()
+        fields = ("username",)
+        field_classes = {"username": auth_forms.UsernameField}
+
+
+class ChangeFullnameForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["first_name"].widget.attrs["placeholder"] = "First Name"
+        self.fields["last_name"].widget.attrs["placeholder"] = "Last Name"
+
+    class Meta:
+        model = get_user_model()
+        fields = ("first_name", "last_name")
+
+
+class ChangeEmailForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["email"].widget.attrs["placeholder"] = "Email"
+
+    class Meta:
+        model = get_user_model()
+        fields = ("email",)

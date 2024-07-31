@@ -1,5 +1,5 @@
 {% extends "common/user-base.html" %}
-{% block title %} Mail Send {% endblock %}
+{% block title %} Delete Account {% endblock %}
 {% block content %}
 <div class="signinform">
     <h1>django-authentication</h1>
@@ -8,8 +8,11 @@
         <!-- main content -->
         <div class="w3l-form-info">
             <div class="w3_info">
-                <h2>An Email is sent to your email id - {{ email }} with instructions</h2>
-                <a href="{% url 'users:redirect-user' %}"><button class="btn btn-primary btn-block">Go Back</button></a>
+                <h2>Account Deletion confirmation</h2>
+                <p>User - {{ user.username }}</p>
+                <p>Email - {{ user.email }}</p>
+                <a href="{{ delete_url }}"><button class="btn btn-primary btn-block" type="submit">Confirm</button></a>
+                <a href="{{ decline_url }}"><button class="btn btn-primary btn-block" type="submit">Decline</button></a>
             </div>
         </div>
         <!-- //main content -->

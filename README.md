@@ -25,8 +25,7 @@ add these
 
 setting.py
 
-```angular2html
-
+```python
 INSTALLED_APPS = [
     ...
 
@@ -34,17 +33,17 @@ INSTALLED_APPS = [
 ]
 ```
 
-```angular2html
+```python
 LOGIN_URL = "users:login"
 LOGIN_REDIRECT_URL = "users:redirect-user"
 ```
 
-```angular2html
+```python
 DEFAULT_USER_ROLE = '<ROLE_NAME>' # a defualt role to give a new user
 DEFAULT_USER_GROUP_NAME = '<GROUP_NAME>' # a default group to add new users to
 ```
 
-```commandline
+```python
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -53,12 +52,27 @@ EMAIL_HOST_PASSWORD = '<APP_PASSWORD>' # app password provided by the google
 EMAIL_USE_TLS = True
 ```
 
-```angular2html
-OTP_LENGTH = 6
-OTP_EXPIRY = 30
+```python
+# expiring time of tokens used in this app
+# dict of times im sec or min or hrs or combined
+# optional default to 10 min
+TOKEN_EXPIRY = {
+    "minutes": 10
+}
 ```
 
-```angular2html
+```python
+OTP_LENGTH = 6 # length of the otp 4 or 6 is preferred
+
+# dict of times im sec or min or hrs or combined
+# optional default to 30 min
+OTP_EXPIRY = {
+    "seconds": 10,
+    "minutes": 30
+}
+```
+
+```python
 if DEBUG:
     # only use in the development
     # not a good practice to use in production
@@ -73,10 +87,8 @@ GOOGLE_AUTH = {
 }
 ```
 
-crate a .env file with email information
-
 urls.py
 
-```commandline
+```python
     path('', include(('users.urls', 'users'), namespace='users')),
 ```

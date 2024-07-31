@@ -1,5 +1,5 @@
 {% extends "common/user-base.html" %}
-{% block title %} Mail Send {% endblock %}
+{% block title %} {{ title }} {% endblock %}
 {% block content %}
 <div class="signinform">
     <h1>django-authentication</h1>
@@ -8,8 +8,12 @@
         <!-- main content -->
         <div class="w3l-form-info">
             <div class="w3_info">
-                <h2>An Email is sent to your email id - {{ email }} with instructions</h2>
-                <a href="{% url 'users:redirect-user' %}"><button class="btn btn-primary btn-block">Go Back</button></a>
+                <h2>{{ title }}</h2>
+                <form method="post">
+					{% csrf_token %}
+                    {% include "common/user-form.html" with form=form %}
+                    <button class="btn btn-primary btn-block" type="submit">Update</button>
+                </form>
             </div>
         </div>
         <!-- //main content -->

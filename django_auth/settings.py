@@ -113,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Calcutta'
 
 USE_I18N = True
 
@@ -140,8 +140,14 @@ EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
 
+TOKEN_EXPIRY = {
+    # "seconds": 10,
+    "minutes": 10
+}
 OTP_LENGTH = 6
-OTP_EXPIRY = 30
+OTP_EXPIRY = {
+    "minutes": 30,
+}
 
 DEFAULT_USER_ROLE = 'EXAMPLE_ROLE'
 DEFAULT_USER_GROUP_NAME = 'example'
