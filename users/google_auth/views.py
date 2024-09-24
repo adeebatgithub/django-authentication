@@ -9,6 +9,7 @@ from django.urls import reverse_lazy
 from django.views import View
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from django.core.exceptions import ImproperlyConfigured
 
 
 def get_flow(state=None):
@@ -23,6 +24,9 @@ def get_flow(state=None):
 class GoogleLogin(View):
 
     def get(self, request):
+        if not hasattr(settings, 'GOOGLE_AUTH'):
+            raise ImproperlyConfigured("GOOGLE_AUTH is not configured")
+
         flow = get_flow()
         authorization_url, state = flow.authorization_url(
             access_type=settings.GOOGLE_AUTH.get("access_type"),
@@ -43,7 +47,7 @@ class GoogleCallback(View):
 
     def get(self, request, **kwargs):
         if request.GET.get('state') != request.session['GOOGLE_AUTH_STATE']:
-            raise HttpResponseServerError("Invalid google auth state")
+            return HttpResponseServerError("Invalid google auth state")
 
         user_info = self.get_user_info()
         request.session['GOOGLE_AUTH_USER_INFO'] = user_info
@@ -53,6 +57,9 @@ class GoogleCallback(View):
 class GoogleRedirect(View):
     model = get_user_model()
     template_name = 'general/user-login.html'
+    group = None
+    role = None
+    redirect_url = None
 
     def user_exists(self, **kwargs):
         return self.model.objects.filter(**kwargs).exists()
@@ -60,16 +67,37 @@ class GoogleRedirect(View):
     def get_user(self, **kwargs):
         return get_object_or_404(self.model, **kwargs)
 
+    def get_redirect_url(self):
+        if hasattr(settings, 'LOGIN_REDIRECT_URL'):
+            return reverse_lazy(settings.LOGIN_REDIRECT_URL)
+
+        if self.redirect_url:
+            return reverse_lazy(self.redirect_url)
+
+        raise ImproperlyConfigured("LOGIN_REDIRECT_URL is not configured")
+
     def login_user(self, user):
         login(self.request, user)
-        return redirect(reverse_lazy(settings.LOGIN_REDIRECT_URL))
+        return redirect(self.get_redirect_url())
 
     def get_default_group(self):
-        return get_object_or_404(Group, name=settings.DEFAULT_USER_GROUP_NAME)
+        if hasattr(settings, "DEFAULT_USER_GROUP_NAME"):
+            return get_object_or_404(Group, name=settings.DEFAULT_USER_GROUP_NAME)
+
+        if self.group:
+            return get_object_or_404(Group, name=self.group)
+
+        raise ImproperlyConfigured("DEFAULT_USER_GROUP_NAME is not configured")
 
     def get_default_role(self):
         user_model = get_user_model()
-        return getattr(user_model, settings.DEFAULT_USER_ROLE)
+        if hasattr(settings, "DEFAULT_USER_GROUP_NAME"):
+            return getattr(user_model, settings.DEFAULT_USER_ROLE)
+
+        if self.group:
+            return getattr(user_model, self.role)
+
+        raise ImproperlyConfigured("DEFAULT_USER_GROUP_NAME is not configured")
 
     def add_role_and_group(self, user):
         user.role = self.get_default_role()

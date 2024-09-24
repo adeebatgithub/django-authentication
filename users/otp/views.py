@@ -28,6 +28,11 @@ class OTPCreateView(View):
         return self.success_url
 
     def get(self, request, *args, **kwargs):
+        if not hasattr(settings, "OTP_LENGTH"):
+            raise ImproperlyConfigured(f"{self.__class__.__name__} has no OTP_LENGTH specified")
+        if not hasattr(settings, "OTP_EXPIRY"):
+            raise ImproperlyConfigured(f"{self.__class__.__name__} has no OTP_EXPIRY specified")
+
         user = self.get_user_model()
         otp = OTPModel(user=user, otp=generate_otp())
         otp.save()
