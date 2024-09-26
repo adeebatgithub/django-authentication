@@ -12,3 +12,6 @@ users/role_change/__pycache__/
 users/google_auth/__pycache__/
 users/google_auth/client_secret.json
 users/otp/__pycache__/
+django_auth/.env
+db.sqlite3
+users/migrations/
