@@ -64,16 +64,25 @@ class VerifyOTPView(FormMixin, generic.TemplateView):
             raise ImproperlyConfigured(f"{self.__class__.__name__} has no model specified")
         return self.model
 
-    def form_valid(self, form):
-        if self.get_model().objects.filter(user=self.get_user_model()):
-            otp_number = form.cleaned_data.get("otp")
-            otp_model = self.get_otp_model(otp_number)
-            if otp_model.user.id == self.get_user_model().id:
-                if otp_number == otp_model.otp:
-                    otp_model.delete()
-                    if otp_model.is_expired():
-                        form.add_error("otp", "OTP is expired")
-                        return self.render_to_response(self.get_context_data(form=form))
-                    return redirect(self.get_success_url())
+    def otp_invalid(self, form):
         form.add_error("otp", "OTP is not valid")
         return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+        if not self.get_model().objects.filter(user=self.get_user_model()):
+            return self.otp_invalid(form)
+
+        otp_number = form.cleaned_data.get("otp")
+        otp_model = self.get_otp_model(otp_number)
+        if otp_model.user.id != self.get_user_model().id:
+            return self.otp_invalid(form)
+
+        if otp_number != otp_model.otp:
+            return self.otp_invalid(form)
+
+        if otp_model.is_expired():
+            return self.otp_invalid(form)
+
+        otp_model.delete()
+        return redirect(self.get_success_url())
+

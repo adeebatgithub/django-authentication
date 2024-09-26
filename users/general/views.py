@@ -1,5 +1,6 @@
 from django.contrib.auth import views as auth_views, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import generic
 
@@ -12,6 +13,11 @@ class ProfileView(LoginRequiredMixin, generic.TemplateView):
     user profile page
     """
     template_name = "general/user-profile.html"
+
+    def get(self, request, username):
+        if username != request.user.username:
+            return redirect(reverse_lazy("users:profile", kwargs={"username": request.user.username}))
+        return super().get(request, username)
 
 
 class LoginView(auth_views.LoginView):

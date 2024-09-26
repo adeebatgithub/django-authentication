@@ -11,3 +11,4 @@ users/reset_password/__pycache__/
 users/role_change/__pycache__/
 users/google_auth/__pycache__/
 users/google_auth/client_secret.json
+users/otp/__pycache__/
