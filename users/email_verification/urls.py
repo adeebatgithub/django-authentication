@@ -15,19 +15,20 @@ urlpatterns = [
 
     # method link
     # send a mail with a verification link
-    path('send-mail/link/', views.VerificationSendLinkMail.as_view(), name='verification-send-mail-link'),
+    path('send-mail/link/<token>/', views.VerificationSendLinkMail.as_view(), name='verification-send-mail-link'),
     # redirect user to a message page
-    path('send-mail/link/done/', views.MailSendDoneView.as_view(), name='verification-mail-send-done'),
-    # verify email using link
-    path('link/<uidb64>/<token>/', views.VerifyAccountLink.as_view(), name='verification-account-link'),
+    path('send-mail/link/done/<token>/', views.MailSendDoneView.as_view(), name='verification-mail-send-done'),
 
     # method - otp
     # create otp
-    path('create-otp/', views.VerificationOTPCreateView.as_view(), name='verification-create-otp'),
+    path('create-otp/<token>/', views.VerificationOTPCreateView.as_view(), name='verification-create-otp'),
     # send an email with an otp
-    path('send-mail/otp/', views.VerificationSendOTPMail.as_view(), name='verification-send-mail-otp'),
+    path('send-mail/otp/<token>/', views.VerificationSendOTPMail.as_view(), name='verification-send-mail-otp'),
     # verify otp
-    path('verify-otp/', views.VerifyAccountOTP.as_view(), name='verification-account-otp'),
+    path('verify-otp/<token>/', views.VerifyAccountOTP.as_view(), name='verification-account-otp'),
+
     # verify email
-    path('update-status/', views.VerificationUpdateStatus.as_view(), name='verification-update-status'),
+    path(
+        'update-status/<uidb64>/<token>/', views.VerificationUpdateStatus.as_view(), name='verification-update-status'
+    ),
 ]

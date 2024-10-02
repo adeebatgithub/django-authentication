@@ -7,8 +7,9 @@ from django.views import generic, View
 from braces.views import LoginRequiredMixin, SuperuserRequiredMixin
 
 from users.django_mail.mixins import SendEmailMixin
-from users.django_mail.views import generate_uidb64_url, SendEmailView
+from users.django_mail.views import SendEmailView
 from .base_views import RoleChangeView
+from ..utils import generate_uidb64_url
 
 
 class RoleSendChangeMail(LoginRequiredMixin, SendEmailView):

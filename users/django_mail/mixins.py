@@ -25,13 +25,13 @@ class SendEmailMixin:
         if settings.EMAIL_HOST_USER:
             return settings.EMAIL_HOST_USER
 
-        raise ImproperlyConfigured \
-            (f"{self.__class__.__name__} missing from email id, define 'from_email' or 'settings.EMAIL_HOST_USER:'")
+        raise ImproperlyConfigured(
+            f"{self.__class__.__name__} missing from email id, define 'from_email' or 'settings.EMAIL_HOST_USER:'")
 
     def get_email_template_name(self):
         if not self.email_template_name:
-            raise ImproperlyConfigured \
-                (f"{self.__class__.__name__} missing email template, define 'email_template_name'")
+            raise ImproperlyConfigured(
+                f"{self.__class__.__name__} missing email template, define 'email_template_name'")
         return self.email_template_name
 
     def get_email_context_data(self):
@@ -47,8 +47,9 @@ class SendEmailMixin:
 
     def get_email_subject(self):
         if not self.email_subject:
-            raise ImproperlyConfigured \
-                (f"{self.__class__.__name__} need definition of 'email_subject' of implementation of 'get_email_subject'")
+            raise ImproperlyConfigured(
+                f"{self.__class__.__name__} need definition of 'email_subject' of implementation of 'get_email_subject'"
+            )
         return self.email_subject
 
     def send_text_mail(self):

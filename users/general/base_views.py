@@ -1,11 +1,13 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.shortcuts import redirect
+from django.urls import reverse_lazy, resolve
 from django.views import View, generic
-from django.conf import settings
+
+from users.utils import get_object_or_redirect
 
 
 class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
@@ -38,7 +40,8 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
         if self.pattern_name:
             return self.pattern_name
 
-    def is_member(self, user, group):
+    @staticmethod
+    def is_member(user, group):
         return user.groups.filter(name=group).exists()
 
     def get_redirect_url(self, *args, **kwargs):
@@ -77,7 +80,7 @@ class AddRole(View):
         if self.role:
             return self.role
 
-        if settings.DEFAULT_USER_ROLE:
+        if hasattr(settings, "DEFAULT_USER_ROLE"):
             return getattr(get_user_model(), settings.DEFAULT_USER_ROLE)
 
         raise ImproperlyConfigured(f"{self.__class__.__name__} need a 'role'")
@@ -88,7 +91,7 @@ class AddRole(View):
         raise ImproperlyConfigured(f"{self.__class__.__name__} needs 'success_url'")
 
     def get_user_object(self):
-        return get_object_or_404(get_user_model(), id=self.request.session.get("user_id"))
+        return get_object_or_redirect(get_user_model(), id=self.request.session.get("user_id"))
 
     def get(self, request, *args, **kwargs):
         model = self.get_user_object()
@@ -108,10 +111,10 @@ class AddToGroup(View):
 
     def get_group_model(self):
         if self.group_name:
-            return get_object_or_404(self.model, name=self.group_name)
+            return get_object_or_redirect(self.model, name=self.group_name)
 
-        if settings.DEFAULT_USER_GROUP_NAME:
-            return get_object_or_404(self.model, name=settings.DEFAULT_USER_GROUP_NAME)
+        if hasattr(settings, "DEFAULT_USER_GROUP_NAME"):
+            return get_object_or_redirect(self.model, name=settings.DEFAULT_USER_GROUP_NAME)
         raise ImproperlyConfigured(f"AddToGroup needs either a definition of 'group_name'")
 
     def get_success_url(self):
@@ -119,9 +122,9 @@ class AddToGroup(View):
             return self.success_url
         raise ImproperlyConfigured(f"AddToGroup needs 'success_url'")
 
-    def get_user_model(self, **kwargs):
-        user_model = get_user_model()
-        return get_object_or_404(user_model, **kwargs)
+    @staticmethod
+    def get_user_model(**kwargs):
+        return get_object_or_redirect(get_user_model(), **kwargs)
 
     def get(self, request, *args, **kwargs):
         group = self.get_group_model()
@@ -147,3 +150,9 @@ class UpdateUser(LoginRequiredMixin, generic.UpdateView):
             "title": self.title
         })
         return context
+
+    def get(self, request, *args, **kwargs):
+        if request.user.username != self.kwargs.get("username"):
+            pattern = f"users:{resolve(request.path).url_name}"
+            return redirect(reverse_lazy(pattern, kwargs={"username": self.request.user.username}))
+        return super().get(request, *args, **kwargs)

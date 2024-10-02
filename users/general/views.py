@@ -1,10 +1,22 @@
 from django.contrib.auth import views as auth_views, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import generic
+from django.core import signing
 
 from users.django_mail import views as mail_views
 from . import forms, base_views
+from users.token import PathTokenValidationMixin, token_generator
+
+
+class RedirectUserView(base_views.RedirectUserView):
+    """
+    Users Redirect View, redirect logged-in user
+    """
+
+    def get_pattern_name(self):
+        return reverse_lazy("users:profile", kwargs={"username": self.request.user.username})
 
 
 class ProfileView(LoginRequiredMixin, generic.TemplateView):
@@ -12,6 +24,11 @@ class ProfileView(LoginRequiredMixin, generic.TemplateView):
     user profile page
     """
     template_name = "general/user-profile.html"
+
+    def get(self, request, *args, **kwargs):
+        if kwargs.get("username") != request.user.username:
+            return redirect(reverse_lazy("users:profile", kwargs={"username": request.user.username}))
+        return super().get(request, kwargs.get("username"))
 
 
 class LoginView(auth_views.LoginView):
@@ -33,15 +50,6 @@ class LoginView(auth_views.LoginView):
     def form_invalid(self, form):
         print(form.errors)
         return super().form_invalid(form)
-
-
-class RedirectUserView(base_views.RedirectUserView):
-    """
-    Users Redirect View, redirect logged-in user
-    """
-
-    def get_pattern_name(self):
-        return reverse_lazy("users:profile", kwargs={"username": self.request.user.username})
 
 
 class LogoutView(auth_views.LogoutView):
@@ -79,8 +87,7 @@ class RegisterView(generic.CreateView):
 
 class AddExampleRole(base_views.AddRole):
     """
-    give users the specified role
-    role is specified in settings.DEFAULT_USER_ROLE
+    give users the specified role     is specified in settings.DEFAULT_USER_ROLE
     """
     success_url = reverse_lazy("users:add-to-example-group")
 
@@ -134,8 +141,10 @@ class DeleteUserConfirmation(LoginRequiredMixin, generic.TemplateView):
     template_name = "general/user-delete-confirm.html"
 
     def get_context_data(self, **kwargs):
-        delete_url = reverse_lazy("users:delete-user", kwargs={"username": self.request.user.username})
-        decline_url = reverse_lazy("users:delete-user-decline")
+        token = token_generator.generate_token(user_id=self.request.user.id,
+                                               path="delete-user-confirmation").make_token(self.request.user.id)
+        delete_url = reverse_lazy("users:delete-user", kwargs={"token": token})
+        decline_url = reverse_lazy("users:delete-user-decline", kwargs={"token": token})
         print(delete_url, decline_url)
         context = super().get_context_data(**kwargs)
         context.update({
@@ -145,21 +154,27 @@ class DeleteUserConfirmation(LoginRequiredMixin, generic.TemplateView):
         return context
 
 
-class DeleteUseDecline(LoginRequiredMixin, generic.RedirectView):
+class DeleteUseDecline(LoginRequiredMixin, PathTokenValidationMixin, generic.RedirectView):
     """
     redirect user if delete confirmation declined
     """
+    pre_path = "delete-user-confirmation"
     url = reverse_lazy("users:redirect-user")
 
 
-class DeleteUser(LoginRequiredMixin, generic.DeleteView):
+class DeleteUser(LoginRequiredMixin, PathTokenValidationMixin, generic.DeleteView):
     """
     delete user
     """
+    pre_path = "delete-user-confirmation"
     model = get_user_model()
-    slug_field = "username"
-    slug_url_kwarg = "username"
     success_url = reverse_lazy("users:redirect-user")
+
+    def get_object(self, queryset=None):
+        token_params = signing.loads(self.kwargs.get("token"))
+        if self.request.user.id != token_params["user_id"]:
+            return redirect(reverse_lazy("users:redirect-user"))
+        return get_user_model().objects.get(id=token_params["user_id"])
 
     def get(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)

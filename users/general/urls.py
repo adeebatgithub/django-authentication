@@ -27,9 +27,9 @@ urlpatterns = [
     # delete confirmation page
     path('delete/confirm/', views.DeleteUserConfirmation.as_view(), name='delete-user-confirm'),
     # delete declined
-    path('delete/decline/', views.DeleteUseDecline.as_view(), name='delete-user-decline'),
+    path('delete/decline/<token>', views.DeleteUseDecline.as_view(), name='delete-user-decline'),
     # delete confirmed
-    path('delete/confirm/<username>', views.DeleteUser.as_view(), name='delete-user'),
+    path('delete/confirm/<token>/', views.DeleteUser.as_view(), name='delete-user'),
 
     # user update
     # change username
