@@ -15,3 +15,11 @@ users/otp/__pycache__/
 django_auth/.env
 db.sqlite3
 users/migrations/
+compact/change_password/__pycache__/
+compact/django_mail/__pycache__/
+compact/email_verification/__pycache__/
+compact/general/__pycache__/
+compact/google_auth/__pycache__/
+compact/otp/__pycache__/
+compact/reset_password/__pycache__/
+compact/role_change/__pycache__/
