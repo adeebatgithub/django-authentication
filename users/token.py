@@ -1,6 +1,6 @@
-from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.core import signing
 
 from users.models import TokenModel
 
@@ -8,8 +8,12 @@ from users.models import TokenModel
 class TokenGenerator:
     model = TokenModel
 
-    def generate_token(self, user):
-        return default_token_generator.make_token(user)
+    def __init__(self):
+        self.token = None
+
+    def generate_token(self, **kwargs):
+        self.token = signing.dumps(kwargs)
+        return self
 
     def create_token_model(self, user, token):
         model = self.model.objects.create(user=user, token=token)
@@ -19,9 +23,8 @@ class TokenGenerator:
         return self.model.objects.filter(token=token).last()
 
     def make_token(self, user):
-        token = self.generate_token(user)
-        self.create_token_model(user, token)
-        return token
+        self.create_token_model(user, self.token)
+        return self.token
 
     def delete_token(self, token=None, model=None):
         if model:
@@ -33,10 +36,15 @@ class TokenGenerator:
 
     def is_valid(self, user, token):
         model = self.get_token_model(token)
+        if not model:
+            return False
+
         if model.user != user:
+            self.delete_token(model=model)
             return False
 
         if model.is_expired():
+            self.delete_token(model=model)
             return False
 
         return True
@@ -60,3 +68,15 @@ class TokenValidationMixin:
         if token_generator.is_valid(self.get_user(), kwargs.get(self.token_url_kwarg)):
             return super().dispatch(request, *args, **kwargs)
         return self.token_invalid()
+
+
+class PathTokenValidationMixin(TokenValidationMixin):
+    pre_path = None
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == "GET":
+            params = signing.loads(self.kwargs.get("token"))
+            if params.get("path") != self.pre_path:
+                return self.token_invalid()
+
+        return super().dispatch(request, *args, **kwargs)
