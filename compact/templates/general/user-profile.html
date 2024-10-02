@@ -1,0 +1,41 @@
+{% extends "common/user-base.html" %}
+{% block title %}
+	Profile
+{% endblock %}
+{% block content %}
+	<div class="signinform">
+        {% if not user.has_usable_password %}
+        	<p>Your are not set a password set password <a href="#">here</a></p>
+        {% endif %} 
+        <div class="container">
+            <a href="{% url 'users:change-username' username=user.username %}">
+                <div>
+                    User name : {{ user.username }}
+                </div>
+            </a>
+            <a href="{% url 'users:change-fullname' username=user.username %}">
+                <div>
+                    Full name : {{ user.first_name }} {{ user.last_name }}
+                </div>
+            </a>
+            <div {% if not user.email_verified %} style="color: red" {% endif %}>
+                <a href="{% url 'users:change-email' username=user.username %}">
+                    Email : {{ user.email }}
+                </a>
+                {% if not user.email %}
+                    <a href="">add email</a>
+                {% else %}
+                    {% if not user.email_verified %}
+					<a href="{% url 'users:verification-email-redirect' %}">verify email</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div>
+                <a href="{% url 'users:change-password-redirect' %}"><button class="btn btn-primary btn-block" type="submit">Change password</button></a>
+                <a href="{% url 'users:role-send-mail' role="STAFF" %}"><button class="btn btn-primary btn-block" type="submit">Change Role</button></a>
+                <a href="{% url 'users:logout' %}"><button class="btn btn-primary btn-block" type="submit">Logout</button></a>
+                <a href="{% url 'users:delete-send-mail' %}"><button class="btn btn-primary btn-block" type="submit">Delete</button></a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

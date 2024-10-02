@@ -1,0 +1,26 @@
+{% if form.non_field_errors %}
+    <div>
+    {% for error in form.non_field_errors %}
+        <span class="invalid-feedback {% if error %}d-block{% endif %}">{{ error }}</span>
+    {% endfor %}
+    </div>
+{% endif %}
+{% for field in form %}
+    <div class="input-group">
+        {% if field.label.lower == "username" %}
+        <span><i class="fas fa-user" aria-hidden="true"></i></span>
+        {% elif "password" in field.label.lower %}
+        <span><i class="fas fa-key" aria-hidden="true"></i></span>
+        {% elif "email" in field.label.lower %}
+        <span><i class="fas fa-envelope" aria-hidden="true"></i></span>
+        {% endif %}
+        {{ field }}
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <span class="invalid-feedback {% if error %}d-block{% endif %}">{{ error }}</span>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <div id="{{ field.label.lower }}-message"></div>
+{% endfor %}
+
