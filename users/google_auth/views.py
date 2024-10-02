@@ -105,7 +105,8 @@ class GoogleRedirect(View):
         user.save()
         return self.login_user(user)
 
-    def get_names(self, name):
+    @staticmethod
+    def get_names(name):
         names = name.split()
         print(name, name)
         if len(names) == 1:

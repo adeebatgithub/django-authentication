@@ -25,10 +25,10 @@ class ProfileView(LoginRequiredMixin, generic.TemplateView):
     """
     template_name = "general/user-profile.html"
 
-    def get(self, request, username):
-        if username != request.user.username:
+    def get(self, request, *args, **kwargs):
+        if kwargs.get("username") != request.user.username:
             return redirect(reverse_lazy("users:profile", kwargs={"username": request.user.username}))
-        return super().get(request, username)
+        return super().get(request, kwargs.get("username"))
 
 
 class LoginView(auth_views.LoginView):
@@ -141,7 +141,8 @@ class DeleteUserConfirmation(LoginRequiredMixin, generic.TemplateView):
     template_name = "general/user-delete-confirm.html"
 
     def get_context_data(self, **kwargs):
-        token = token_generator.generate_token(user_id=self.request.user.id, path="delete-user-confirmation").make_token()
+        token = token_generator.generate_token(user_id=self.request.user.id,
+                                               path="delete-user-confirmation").make_token(self.request.user.id)
         delete_url = reverse_lazy("users:delete-user", kwargs={"token": token})
         decline_url = reverse_lazy("users:delete-user-decline", kwargs={"token": token})
         print(delete_url, decline_url)

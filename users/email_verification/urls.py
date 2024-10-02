@@ -28,5 +28,7 @@ urlpatterns = [
     path('verify-otp/<token>/', views.VerifyAccountOTP.as_view(), name='verification-account-otp'),
 
     # verify email
-    path('update-status/<uidb64>/<token>/', views.VerificationUpdateStatus.as_view(), name='verification-update-status'),
+    path(
+        'update-status/<uidb64>/<token>/', views.VerificationUpdateStatus.as_view(), name='verification-update-status'
+    ),
 ]

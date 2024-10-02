@@ -40,7 +40,8 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
         if self.pattern_name:
             return self.pattern_name
 
-    def is_member(self, user, group):
+    @staticmethod
+    def is_member(user, group):
         return user.groups.filter(name=group).exists()
 
     def get_redirect_url(self, *args, **kwargs):
@@ -121,7 +122,8 @@ class AddToGroup(View):
             return self.success_url
         raise ImproperlyConfigured(f"AddToGroup needs 'success_url'")
 
-    def get_user_model(self, **kwargs):
+    @staticmethod
+    def get_user_model(**kwargs):
         return get_object_or_redirect(get_user_model(), **kwargs)
 
     def get(self, request, *args, **kwargs):

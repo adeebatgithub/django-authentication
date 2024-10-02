@@ -8,7 +8,7 @@ from users.django_mail import views as mail_views
 from users.models import OTPModel
 from users.otp import views as otp_views
 from users.token import PathTokenValidationMixin, token_generator
-from users.utils import get_object_or_redirect
+from users.utils import get_object_or_redirect, generate_uidb64_url
 
 
 class RedirectUser(LoginRequiredMixin, generic.RedirectView):
@@ -36,7 +36,6 @@ class VerificationSendLinkMail(LoginRequiredMixin, PathTokenValidationMixin, mai
     """
     pre_path = "email-redirect"
     template_name = "verification/user-verify-email.html"
-    success_url = reverse_lazy("users:verification-mail-send-done")
     send_html_email = True
     email_subject = "Account Verification"
     email_template_name = "verification/user-verification-link-mail.html"
@@ -45,13 +44,14 @@ class VerificationSendLinkMail(LoginRequiredMixin, PathTokenValidationMixin, mai
         return self.request.user.email
 
     def get_email_context_data(self):
-        url = mail_views.generate_uidb64_url(pattern_name="users:verification-update-status", user=self.request.user,
-                                             absolute=True, request=self.request)
+        url = generate_uidb64_url(pattern_name="users:verification-update-status", user=self.request.user,
+                                  absolute=True, request=self.request)
         return {"url": url}
 
     def get_success_url(self):
         token = token_generator.generate_token(user_id=self.request.user.id, path="email-link-send").make_token(
             self.request.user)
+        return reverse_lazy("users:verification-mail-send-done", kwargs={"token": token})
 
 
 class MailSendDoneView(LoginRequiredMixin, PathTokenValidationMixin, generic.TemplateView):
@@ -120,7 +120,7 @@ class VerifyAccountOTP(LoginRequiredMixin, PathTokenValidationMixin, otp_views.V
         return context
 
     def get_success_url(self):
-        return mail_views.generate_uidb64_url(pattern_name="users:verification-update-status", user=self.request.user)
+        return generate_uidb64_url(pattern_name="users:verification-update-status", user=self.request.user)
 
 
 class VerificationUpdateStatus(LoginRequiredMixin, View):

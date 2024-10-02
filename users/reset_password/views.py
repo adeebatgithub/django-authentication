@@ -10,6 +10,7 @@ from users.models import OTPModel
 from users.otp import views as otp_views
 from users.token import TokenValidationMixin, PathTokenValidationMixin, token_generator
 from . import forms
+from ..utils import generate_uidb64_url
 
 
 class GetEmailView(mail_views.GetEmailView):
@@ -57,7 +58,7 @@ class ResetSendLinkMail(ResetSendMail):
 
     def get_email_context_data(self):
         user = get_object_or_404(get_user_model(), email=self.get_to_email())
-        url = mail_views.generate_uidb64_url(
+        url = generate_uidb64_url(
             pattern_name="users:reset-password",
             user=user,
             absolute=True,
@@ -135,7 +136,7 @@ class ResetVerifyOTP(PathTokenValidationMixin, otp_views.VerifyOTPView):
         return context
 
     def get_success_url(self):
-        return mail_views.generate_uidb64_url(pattern_name="users:reset-password", user=self.get_user_model())
+        return generate_uidb64_url(pattern_name="users:reset-password", user=self.get_user_model())
 
 
 class PasswordResetView(TokenValidationMixin, auth_views.PasswordResetConfirmView):

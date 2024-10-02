@@ -1,4 +1,4 @@
-from django.contrib.auth import logout
+from django.contrib.auth import logout, get_user_model
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
@@ -9,13 +9,13 @@ from users.django_mail import views as mail_views
 from users.models import OTPModel
 from users.otp import views as otp_views
 from users.token import TokenValidationMixin, token_generator, PathTokenValidationMixin
+from users.utils import generate_uidb64_url
 from . import forms
 
 
 class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
     """
-    redirect to send email to the user righter a password change link
-    or a verification OTP
+    redirect to send email to the user a password change link or a verification OTP
     otp = True will send an otp instead of link
     """
     otp = False
@@ -48,7 +48,7 @@ class ChangeSendLinkMail(ChangeSendMail):
     email_template_name = "password-change/change-link-mail.html"
 
     def get_email_context_data(self):
-        url = mail_views.generate_uidb64_url(
+        url = generate_uidb64_url(
             pattern_name="users:change-password",
             user=self.request.user,
             absolute=True,
@@ -59,7 +59,8 @@ class ChangeSendLinkMail(ChangeSendMail):
         return context
 
     def get_success_url(self):
-        token = token_generator.generate_token(user_id=self.request.user.id, path="mail-send").make_token(self.request.user)
+        token = token_generator.generate_token(user_id=self.request.user.id, path="mail-send").make_token(
+            self.request.user)
         return reverse_lazy("users:change-mail-send-done", kwargs={"token": token})
 
 
@@ -90,14 +91,15 @@ class ChangeSendOTPMail(ChangeSendMail):
     email_template_name = "password-change/change-otp-mail.html"
 
     def get_email_context_data(self):
-        id = self.request.session.pop("OTP_ID")
-        otp_model = OTPModel.objects.filter(id=id).last()
+        otp_id = self.request.session.pop("OTP_ID")
+        otp_model = OTPModel.objects.filter(id=otp_id).last()
         if not otp_model:
             return redirect(reverse_lazy("users:change-password-redirect"))
         return {"otp": otp_model.otp}
 
     def get_success_url(self):
-        token = token_generator.generate_token(user_id=self.request.user.id, path="otp-send").make_token(self.request.user)
+        token = token_generator.generate_token(user_id=self.request.user.id, path="otp-send").make_token(
+            self.request.user)
         return reverse_lazy("users:change-verify-otp", kwargs={"token": token})
 
 
@@ -118,7 +120,7 @@ class ChangeVerifyOTPView(LoginRequiredMixin, PathTokenValidationMixin, otp_view
 
     def get_success_url(self):
         token_generator.delete_token(token=self.kwargs.get("token"))
-        return mail_views.generate_uidb64_url(pattern_name="users:change-password", user=self.get_user_model())
+        return generate_uidb64_url(pattern_name="users:change-password", user=self.get_user_model())
 
 
 class MailSendDoneView(PathTokenValidationMixin, generic.TemplateView):
@@ -143,7 +145,16 @@ class PasswordChangeView(LoginRequiredMixin, TokenValidationMixin, auth_views.Pa
     template_name = "password-change/user-password-change.html"
     logout_user = True
 
+    def verify_email(self):
+        model = get_user_model().objects.get(id=self.request.user.id)
+        model.email_verified = True
+        model.save()
+
     def get_success_url(self):
+        if not self.request.user.email_verified:
+            self.verify_email()
+
         if self.logout_user:
             logout(self.request)
+
         return reverse_lazy("users:login")
