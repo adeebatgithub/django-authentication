@@ -1,11 +1,16 @@
 from braces.views import LoginRequiredMixin
+from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from django.views import generic
 
 from compact.token import PathTokenValidationMixin, token_generator
 from compact.otp import views as otp_views
 from compact.django_mail import views as mail_views
+from compact.change_password.forms import ChangePasswordForm
+from compact.general.forms import ChangeFullnameForm, ChangeUsernameForm, ChangeEmailForm
 from .mixins import AccessRequiredMixin
 from ..models import OTPModel
 from ..utils import get_object_or_redirect, generate_uidb64_url
@@ -16,6 +21,19 @@ class ProfileView(LoginRequiredMixin, AccessRequiredMixin, generic.TemplateView)
     user profile page
     """
     template_name = "general/user-profile.html"
+
+    def get_context_data(self, **kwargs):
+        uidb64 = urlsafe_base64_encode(force_bytes(self.request.user.id))
+        token = default_token_generator.make_token(self.request.user)
+        context_data = {
+            "password_change_form": ChangePasswordForm(user=self.request.user),
+            "username_change_form": ChangeUsernameForm(),
+            "email_change_form": ChangeEmailForm(),
+            "name_change_form": ChangeFullnameForm(),
+
+            "uidb64": uidb64,
+            "token": token,
+        }
 
     def get(self, request, *args, **kwargs):
         if kwargs.get("username") != request.user.username:

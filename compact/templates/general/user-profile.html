@@ -1,41 +1,171 @@
 {% extends "common/user-base.html" %}
+
 {% block title %}
-	Profile
+    Profile
 {% endblock %}
+
 {% block content %}
-	<div class="signinform">
+    <style>
+        /* Importing Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+        /* General Page Styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f4f8;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .signinform {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .signinform h2 {
+            font-size: 24px;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .container div {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .container div span {
+            font-weight: 500;
+        }
+
+        /* Link Styling */
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Form Button Styling */
+        .btn {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-block;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Error Handling */
+        .container .error {
+            color: red;
+        }
+
+        /* Animation for form entry */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .signinform {
+            animation: fadeInUp 0.5s ease-in-out;
+        }
+    </style>
+
+    <!-- Profile Information Section -->
+    <div class="signinform">
         {% if not user.has_usable_password %}
-        	<p>Your are not set a password set password <a href="#">here</a></p>
-        {% endif %} 
+        <p class="error">You have not set a password. Set a password <a href="#">here</a></p>
+        {% endif %}
         <div class="container">
-            <a href="{% url 'users:change-username' username=user.username %}">
-                <div>
-                    User name : {{ user.username }}
-                </div>
-            </a>
-            <a href="{% url 'users:change-fullname' username=user.username %}">
-                <div>
-                    Full name : {{ user.first_name }} {{ user.last_name }}
-                </div>
-            </a>
-            <div {% if not user.email_verified %} style="color: red" {% endif %}>
-                <a href="{% url 'users:change-email' username=user.username %}">
-                    Email : {{ user.email }}
-                </a>
-                {% if not user.email %}
-                    <a href="">add email</a>
-                {% else %}
-                    {% if not user.email_verified %}
-					<a href="{% url 'users:verification-email-redirect' %}">verify email</a>
-                    {% endif %}
-                {% endif %}
+            <div>
+                <span>User Name:</span> {{ user.username }}
             </div>
             <div>
-                <a href="{% url 'users:change-password-redirect' %}"><button class="btn btn-primary btn-block" type="submit">Change password</button></a>
-                <a href="{% url 'users:role-send-mail' role="STAFF" %}"><button class="btn btn-primary btn-block" type="submit">Change Role</button></a>
-                <a href="{% url 'users:logout' %}"><button class="btn btn-primary btn-block" type="submit">Logout</button></a>
-                <a href="{% url 'users:delete-send-mail' %}"><button class="btn btn-primary btn-block" type="submit">Delete</button></a>
+                <span>Full Name:</span> {{ user.first_name }} {{ user.last_name }}
             </div>
+            <div {% if not user.email_verified %} class="error" {% endif %}>
+                <span>Email:</span> {{ user.email }}
+                {% if not user.email %}
+                <a href="#">Add email</a>
+                {% else %}
+                {% if not user.email_verified %}
+                <a href="{% url 'users:verification-email-redirect' %}">Verify email</a>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Section -->
+    <div class="signinform">
+        <div class="container">
+            <h2>Change Password</h2>
+            <form method="post">
+                {% csrf_token %}
+                {% include "common/user-form.html" with form=password_change_form %}
+                <button class="btn" type="submit">Update Password</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Username Section -->
+    <div class="signinform">
+        <div class="container">
+            <h2>Change Username</h2>
+            <form method="post">
+                {% csrf_token %}
+                {% include "common/user-form.html" with form=username_change_form %}
+                <button class="btn" type="submit">Update Username</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Email Section -->
+    <div class="signinform">
+        <div class="container">
+            <h2>Change Email</h2>
+            <form method="post">
+                {% csrf_token %}
+                {% include "common/user-form.html" with form=email_change_form %}
+                <button class="btn" type="submit">Update Email</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Full Name Section -->
+    <div class="signinform">
+        <div class="container">
+            <h2>Change Full Name</h2>
+            <form method="post">
+                {% csrf_token %}
+                {% include "common/user-form.html" with form=name_change_form %}
+                <button class="btn" type="submit">Update Name</button>
+            </form>
         </div>
     </div>
 {% endblock %}
