@@ -1,9 +1,14 @@
+.idea/
 venv/
+db.sqlite3
+
 django_auth/__pycache__/
+django_auth/.env
+django_auth/client_secret.json
+
 users/__pycache__/
 users/migrations/__pycache__/
 users/django_mail/__pycache__/
-.idea/
 users/change_password/__pycache__/
 users/email_verification/__pycache__/
 users/general/__pycache__/
@@ -12,6 +17,5 @@ users/role_change/__pycache__/
 users/google_auth/__pycache__/
 users/google_auth/client_secret.json
 users/otp/__pycache__/
-django_auth/.env
-db.sqlite3
 users/migrations/
+users/management/

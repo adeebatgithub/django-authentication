@@ -4,33 +4,40 @@ const MIN_LENGTH = 5
 const MAX_LENGTH = 15
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/
 
-const socket = new WebSocket('ws://localhost:8000/ws/validator/')
+async function validateUsername(username) {
+    let errorMessages = [];
 
-
-async function validateUsername(username, socket) {
-    let errorMessages = []
+    // Length validation
     if (username.length < MIN_LENGTH || username.length > MAX_LENGTH) {
-        errorMessages.push(`Username must be between ${MIN_LENGTH} and ${MAX_LENGTH} characters long.`)
+        errorMessages.push(`Username must be between ${MIN_LENGTH} and ${MAX_LENGTH} characters long.`);
     }
+
+    // Regex validation
     if (!USERNAME_REGEX.test(username)) {
-        errorMessages.push('Username can only contain letters, numbers, and underscores.')
+        errorMessages.push('Username can only contain letters, numbers, and underscores.');
     }
-    const is_exists = (username) => {
-        return new Promise((resolve, reject) => {
-            socket.send(JSON.stringify({ username: username }))
-            socket.onmessage = (e) => {
-                const data = JSON.parse(e.data)
-                resolve(data.message)
+
+    // Check if username exists
+    async function isExists(username) {
+        if (username.length < MIN_LENGTH) {return false}
+        try {
+            const response = await fetch(`/validate/username/${encodeURIComponent(username)}/`)
+            if (!response.ok) {
+                console.error("response status: ", response.status)
             }
-            socket.onerror = (err) => {
-                reject(err)
-            }
-        })
+            const data = await response.json();
+            return data.exists
+        } catch (error) {
+            console.error('Error:', error);
+            return false
+        }
     }
-    if (await is_exists(username)) {
-        errorMessages.push("Username already taken");
+
+    if (await isExists(username)) {
+        errorMessages.push("Username already taken.");
     }
-    return errorMessages
+
+    return errorMessages;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -42,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
             feedback.innerHTML = null
             return 0
         }
-        const errorMessages = await validateUsername(usernameInput.value, socket)
+        const errorMessages = await validateUsername(usernameInput.value)
         if (errorMessages) {
             let errorHTML = (m) => {
                 let listItems = m.map((v) => `<li>${v}</li>`).join('')

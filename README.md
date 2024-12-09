@@ -1,59 +1,58 @@
-
 # **Django User Manager App**
 
-A robust user management system built with Django, featuring essential functionality for user authentication, role management, and security. This app can handle everything from basic login/logout to advanced role management and OAuth integration.
+A robust user management system built with Django, featuring essential functionality for user authentication, role
+management, and security. This app can handle everything from basic login/logout to advanced role management and OAuth
+integration.
 
-> **Alternative**: For an even quicker setup, consider using the `django-allauth` package, which provides pre-built authentication flows and social login support.
+> **Alternative**: For an even quicker setup, consider using the `django-allauth` package, which provides pre-built
+> authentication flows and social login support.
 
 ---
 
 ## **Features**
+
 - **User Authentication:**
-  - Login
-  - Logout
-  - Registration
+    - Login
+    - Logout
+    - Registration
 - **Role & Group Management:**
-  - Assign roles to users
-  - Modify user roles
-  - Add users to groups
-  - Change user groups
+    - Assign roles to users
+    - Modify user roles
+    - Add users to groups
+    - Change user groups
 - **Password Management:**
-  - Password reset (via OTP & link)
-  - Password change with old password (via OTP & link)
+    - Password reset (via OTP & link)
+    - Password change with old password (via OTP & link)
 - **Email Verification:**
-  - Verify user emails via OTP & link
+    - Verify user emails via OTP & link
 - **Google OAuth Integration**
-  - Google OAuth login
+    - Google OAuth login
 
 ---
 
 ## **Installation**
 
 ### **1. Clone the Repository**
+
 Clone the repo and copy the `users` app to your project directory.
 
 ### **2. Configure Your Django Project**
+
 Add the following configurations to your `settings.py`:
 
 #### **Installed Apps**
-Add `daphne` and the `users` app to your `INSTALLED_APPS`:
+
+Add `users` app to your `INSTALLED_APPS`:
 
 ```python
 INSTALLED_APPS = [
-    'daphne',  # Required for ASGI
     # ... other apps ...
     'users.apps.UsersConfig',  # Your users app
 ]
 ```
 
-#### **ASGI Configuration**
-Add the following ASGI application setting:
-
-```python
-ASGI_APPLICATION = 'django_auth.asgi.application'
-```
-
 #### **Login URLs**
+
 Set the login and redirect URLs:
 
 ```python
@@ -62,6 +61,7 @@ LOGIN_REDIRECT_URL = "users:redirect-user"  # URL to redirect post-login
 ```
 
 #### **Default Role & Group**
+
 Set default role and group for new users:
 
 ```python
@@ -70,6 +70,7 @@ DEFAULT_USER_GROUP_NAME = '<GROUP_NAME>'  # Add new users to this default group
 ```
 
 #### **Email Configuration**
+
 Configure the email backend for sending OTPs, verification emails, etc. using Gmail:
 
 ```python
@@ -82,6 +83,7 @@ EMAIL_USE_TLS = True
 ```
 
 #### **Token Expiry**
+
 Set the expiration time for tokens (such as password reset tokens):
 
 ```python
@@ -92,6 +94,7 @@ TOKEN_EXPIRY = {
 ```
 
 #### **OTP Configuration**
+
 Configure the length and expiry of OTPs:
 
 ```python
@@ -103,6 +106,7 @@ OTP_EXPIRY = {
 ```
 
 #### **Google OAuth Setup**
+
 Configure Google OAuth using credentials from the Google API Console:
 
 ```python
@@ -133,9 +137,12 @@ path('', include(('users.urls', 'users'), namespace='users')),
 
 ## **Conclusion**
 
-Your Django user manager app is now ready! This app provides a comprehensive user management system out of the box, with support for role management, password handling, and even Google OAuth. Customize the settings as per your project requirements.
+Your Django user manager app is now ready! This app provides a comprehensive user management system out of the box, with
+support for role management, password handling, and even Google OAuth. Customize the settings as per your project
+requirements.
 
-For more advanced use cases or faster integration of social login, you can always explore using the `django-allauth` package.
+For more advanced use cases or faster integration of social login, you can always explore using the `django-allauth`
+package.
 
 ---
 

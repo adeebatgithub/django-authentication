@@ -37,9 +37,6 @@ AUTH_USER_MODEL = 'users.User'
 
 # Application definition
 INSTALLED_APPS = [
-
-    'daphne',
-    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -79,8 +76,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'django_auth.wsgi.application'
-ASGI_APPLICATION = 'django_auth.asgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -161,7 +156,7 @@ if DEBUG:
 
 GOOGLE_AUTH = {
     'client_id': env('GOOGLE_CLIENT_ID'),
-    'client_secret_file': 'users/google_auth/client_secret.json',
+    'client_secret_file': 'django_auth/client_secret.json',
     'redirect_uri': f'http://127.0.0.1:8000/accounts/google/login/callback/',
     "scopes": [
         "openid",
