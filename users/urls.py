@@ -8,6 +8,7 @@ urlpatterns = [
     path("change/role/", include("users.role_change.urls")),
     path("verification/email/", include("users.email_verification.urls")),
     path("accounts/google/", include("users.google_auth.urls")),
+    path("resolve/account/lock/", include("users.resolve_lock.urls")),
 
     # validators
     path("validate/username/<str:username>/", UserNameValidator.as_view()),

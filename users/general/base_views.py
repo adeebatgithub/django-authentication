@@ -136,7 +136,7 @@ class AddToGroup(View):
 
 class UpdateUser(LoginRequiredMixin, generic.UpdateView):
     model = get_user_model()
-    template_name = "general/user-update.html"
+    template_name = "users/general/update.html"
     slug_field = "username"
     slug_url_kwarg = "username"
     title = None

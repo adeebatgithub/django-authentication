@@ -8,14 +8,14 @@ from django.views import generic, View
 from users.django_mail import views as mail_views
 from users.models import OTPModel
 from users.otp import views as otp_views
-from users.token import TokenValidationMixin, token_generator, PathTokenValidationMixin
+from users.token_generators.user_token import TokenValidationMixin, token_generator, PathTokenValidationMixin
 from users.utils import generate_uidb64_url
 from . import forms
 
 
 class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
     """
-    redirect to send email to the user a password change link or a verification OTP
+    redirect to send email to the user a password change link or a verification OTP,
     otp = True will send an otp instead of link
     """
     otp = False
@@ -32,7 +32,6 @@ class ChangeSendMail(LoginRequiredMixin, PathTokenValidationMixin, mail_views.Se
     """
     send password change email to user's email
     """
-    template_name = "password-change/user-password-change-mail.html"
     email_subject = "Password Change Mail"
     send_html_email = True
 
@@ -45,7 +44,7 @@ class ChangeSendLinkMail(ChangeSendMail):
     send password change link to the user's email
     """
     pre_path = "change-redirect"
-    email_template_name = "password-change/change-link-mail.html"
+    email_template_name = "users/mail/link.html"
 
     def get_email_context_data(self):
         url = generate_uidb64_url(
@@ -54,7 +53,13 @@ class ChangeSendLinkMail(ChangeSendMail):
             absolute=True,
             request=self.request
         )
-        context = {"url": url}
+        context = {
+            "url": url,
+            "subject": self.email_subject,
+            "content": "We received a request to change your password for your account. To proceed with the password "
+                       "change process, please follow the link below:",
+            "btn_label": "Change Password",
+        }
         self.request.session["USER_EMAIL_ID"] = self.get_to_email()
         return context
 
@@ -88,14 +93,19 @@ class ChangeSendOTPMail(ChangeSendMail):
     send verification OTP to the users email
     """
     pre_path = "otp-create"
-    email_template_name = "password-change/change-otp-mail.html"
+    email_template_name = "users/mail/otp.html"
 
     def get_email_context_data(self):
         otp_id = self.request.session.pop("OTP_ID")
         otp_model = OTPModel.objects.filter(id=otp_id).last()
         if not otp_model:
             return redirect(reverse_lazy("users:change-password-redirect"))
-        return {"otp": otp_model.otp}
+        return {
+            "otp": otp_model.otp,
+            "subject": self.email_subject,
+            "content": "You have requested to change your password. Please use the following OTP to proceed with the "
+                       "password change:",
+        }
 
     def get_success_url(self):
         token = token_generator.generate_token(user_id=self.request.user.id, path="otp-send").make_token(
@@ -108,7 +118,7 @@ class ChangeVerifyOTPView(LoginRequiredMixin, PathTokenValidationMixin, otp_view
     verify the otp provided by the user
     """
     pre_path = "otp-send"
-    template_name = "common/user-verify-otp.html"
+    template_name = "users/common/verify-otp.html"
 
     def get_user_model(self):
         return self.request.user
@@ -128,12 +138,14 @@ class MailSendDoneView(PathTokenValidationMixin, generic.TemplateView):
     render a template after successfully sending email with success message
     """
     pre_path = "mail-send"
-    template_name = "common/mail-send-done.html"
+    template_name = "users/mail/send-done.html"
 
     def get_context_data(self, *args, **kwargs):
         email = self.request.session.pop("USER_EMAIL_ID")
         context = super().get_context_data()
-        context.update({"email": email})
+        context.update({
+            "message": f"An Email is sent to your email id - {email} with instructions"
+        })
         return context
 
 
@@ -142,7 +154,7 @@ class PasswordChangeView(LoginRequiredMixin, TokenValidationMixin, auth_views.Pa
     change password
     """
     form_class = forms.ChangePasswordForm
-    template_name = "password-change/user-password-change.html"
+    template_name = "users/password-change/password-change.html"
     logout_user = True
 
     def verify_email(self):

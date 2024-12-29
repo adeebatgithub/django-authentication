@@ -8,7 +8,7 @@ urlpatterns = [
     # path -
     # using otp to verify and redirect to reset password
 
-    path('', views.GetEmailView.as_view(), name='password-forgot'),
+    path('', views.GetEmailView.as_view(), name='password-reset'),
     # redirect user to give their registered email and redirect to chosen path (otp/link)
     path('redirect/<token>/', views.RedirectUserView.as_view(), name='reset-password-redirect'),
 

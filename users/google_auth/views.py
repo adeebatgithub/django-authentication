@@ -56,7 +56,7 @@ class GoogleCallback(View):
 
 class GoogleRedirect(View):
     model = get_user_model()
-    template_name = 'general/user-login.html'
+    template_name = 'general/login.html'
     group = None
     role = None
     redirect_url = None

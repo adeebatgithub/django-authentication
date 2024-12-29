@@ -16,7 +16,7 @@ class RoleSendChangeMail(LoginRequiredMixin, SendEmailView):
     to_email = settings.EMAIL_HOST_USER
     email_subject = "Role Change Request"
     send_html_email = True
-    email_template_name = "role/user-role-change-mail.html"
+    email_template_name = "role/role-change-mail.html"
     success_url = reverse_lazy("users:role-send-mail-done")
 
     def get_success_url(self):
@@ -40,11 +40,14 @@ class RoleSendChangeMail(LoginRequiredMixin, SendEmailView):
 
 
 class RoleChangeMailSendDone(LoginRequiredMixin, generic.TemplateView):
-    template_name = "role/user-role-chane-mail-send-done.html"
+    template_name = "users/mail/send-done.html"
+
+    def get_context_data(self, **kwargs):
+        return {"message": "An Email is sent to the admin"}
 
 
 class RoleChangeConfirm(SuperuserRequiredMixin, generic.TemplateView):
-    template_name = "role/user-role-change-confirm.html"
+    template_name = "users/role/role-change-confirm.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -68,7 +71,7 @@ class RoleChangeConfirm(SuperuserRequiredMixin, generic.TemplateView):
 
 
 class RoleChangeDone(generic.TemplateView):
-    template_name = "role/user-role-change-done.html"
+    template_name = "users/role/role-change-done.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -83,7 +86,7 @@ class RoleChangeDone(generic.TemplateView):
 class RoleChangeDoneMail(SendEmailView):
     email_subject = "Role Change Done"
     send_html_email = True
-    email_template_name = "role/user-role-change-done-mail.html"
+    email_template_name = "role/role-change-done-mail.html"
     success_url = reverse_lazy("users:role-change-done")
 
     def get_success_url(self):
@@ -97,7 +100,7 @@ class RoleChangeDoneMail(SendEmailView):
 
 
 class RoleChangeDeclined(generic.TemplateView):
-    template_name = "role/user-role-change-done.html"
+    template_name = "users/role/role-change-done.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -123,7 +126,7 @@ class RoleChangeDecline(generic.RedirectView):
 class RoleChangeFailMail(LoginRequiredMixin, SendEmailMixin, View):
     email_subject = "Role Change Failed"
     send_html_email = True
-    email_template_name = "role/user-role-change-done-mail.html"
+    email_template_name = "role/role-change-done-mail.html"
     success_url = reverse_lazy("users:role-change-fail")
 
     def get_success_url(self):

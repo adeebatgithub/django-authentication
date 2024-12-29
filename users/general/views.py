@@ -1,13 +1,13 @@
 from django.contrib.auth import views as auth_views, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core import signing
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import generic
-from django.core import signing
 
 from users.django_mail import views as mail_views
+from users.token_generators.user_token import PathTokenValidationMixin, token_generator
 from . import forms, base_views
-from users.token import PathTokenValidationMixin, token_generator
 
 
 class RedirectUserView(base_views.RedirectUserView):
@@ -23,7 +23,7 @@ class ProfileView(LoginRequiredMixin, generic.TemplateView):
     """
     user profile page
     """
-    template_name = "general/user-profile.html"
+    template_name = "users/general/profile.html"
 
     def get(self, request, *args, **kwargs):
         if kwargs.get("username") != request.user.username:
@@ -39,7 +39,7 @@ class LoginView(auth_views.LoginView):
     set settings.LOGIN_REDIRECT_URL to 'users:redirect-logged-user'
     to redirect user based on the group or role
     """
-    template_name = "general/user-login.html"
+    template_name = "users/general/login.html"
     form_class = forms.UserLoginForm
     redirect_authenticated_user = True
     pattern_name = "users:redirect-user"
@@ -47,8 +47,13 @@ class LoginView(auth_views.LoginView):
     def get_redirect_url(self):
         return reverse_lazy(self.pattern_name)
 
+    def form_valid(self, form):
+        form.reset_login_attempts()
+        return super().form_valid(form)
+
     def form_invalid(self, form):
-        print(form.errors)
+        if "account_locked" in form.error_messages:
+            return redirect("users:get-email-lock")
         return super().form_invalid(form)
 
 
@@ -76,7 +81,7 @@ class RegisterView(generic.CreateView):
     regular user is created and redirected to add the user in to a group
     """
     model = get_user_model()
-    template_name = "general/user-register.html"
+    template_name = "users/general/register.html"
     form_class = forms.UserRegistrationForm
     success_url = reverse_lazy("users:add-example-role")
 
@@ -94,7 +99,7 @@ class AddExampleRole(base_views.AddRole):
 
 class AddToExampleGroup(base_views.AddToGroup):
     """
-    add users to the specified group
+    add users to the specified group,
     group name is specified in settings.DEFAULT_USER_GROUP_NAME
     """
     success_url = reverse_lazy("users:redirect-user")
@@ -106,7 +111,7 @@ class DeleteUserSendMail(LoginRequiredMixin, mail_views.SendEmailView):
     """
     email_subject = "Delete User Request"
     send_html_email = True
-    email_template_name = "general/user-delete-mail.html"
+    email_template_name = "general/deletion-mail.html"
     success_url = reverse_lazy("users:delete-mail-done")
 
     def get_to_email(self):
@@ -125,12 +130,12 @@ class MailSendDoneView(LoginRequiredMixin, generic.TemplateView):
     """
     render a template after successfully sending email with success message
     """
-    template_name = "common/mail-send-done.html"
+    template_name = "users/mail/send-done.html"
 
     def get_context_data(self, *args, **kwargs):
         email = self.request.user.email
         context = super().get_context_data()
-        context.update({"email": email})
+        context.update({"message": f"An Email is sent to your email id - {email} with instructions"})
         return context
 
 
@@ -138,7 +143,7 @@ class DeleteUserConfirmation(LoginRequiredMixin, generic.TemplateView):
     """
     confirm user delete or dont
     """
-    template_name = "general/user-delete-confirm.html"
+    template_name = "users/general/delete-confirm.html"
 
     def get_context_data(self, **kwargs):
         token = token_generator.generate_token(user_id=self.request.user.id,

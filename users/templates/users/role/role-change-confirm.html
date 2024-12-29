@@ -1,5 +1,5 @@
-{% extends "common/user-base.html" %}
-{% block title %} Delete Account {% endblock %}
+{% extends "users/common/base.html" %}
+{% block title %} Confirm Role Change {% endblock %}
 {% block content %}
 <div class="signinform">
     <h1>django-authentication</h1>
@@ -8,10 +8,11 @@
         <!-- main content -->
         <div class="w3l-form-info">
             <div class="w3_info">
-                <h2>Account Deletion confirmation</h2>
-                <p>User - {{ user.username }}</p>
-                <p>Email - {{ user.email }}</p>
-                <a href="{{ delete_url }}"><button class="btn btn-primary btn-block" type="submit">Confirm</button></a>
+                <h2>role change confirmation</h2>
+                <p>User - {{ username }}</p>
+                <p>Email - {{ email }}</p>
+                <p>Role - {{ role }}</p>
+                <a href="{{ accept_url }}"><button class="btn btn-primary btn-block" type="submit">Confirm</button></a>
                 <a href="{{ decline_url }}"><button class="btn btn-primary btn-block" type="submit">Decline</button></a>
             </div>
         </div>

@@ -7,7 +7,7 @@ from django.views import generic, View
 from users.django_mail import views as mail_views
 from users.models import OTPModel
 from users.otp import views as otp_views
-from users.token import PathTokenValidationMixin, token_generator
+from users.token_generators.user_token import PathTokenValidationMixin, token_generator
 from users.utils import get_object_or_redirect, generate_uidb64_url
 
 
@@ -35,10 +35,9 @@ class VerificationSendLinkMail(LoginRequiredMixin, PathTokenValidationMixin, mai
     send an email with email verification link
     """
     pre_path = "email-redirect"
-    template_name = "verification/user-verify-email.html"
     send_html_email = True
     email_subject = "Account Verification"
-    email_template_name = "verification/user-verification-link-mail.html"
+    email_template_name = "users/mail/link.html"
 
     def get_to_email(self):
         return self.request.user.email
@@ -46,7 +45,13 @@ class VerificationSendLinkMail(LoginRequiredMixin, PathTokenValidationMixin, mai
     def get_email_context_data(self):
         url = generate_uidb64_url(pattern_name="users:verification-update-status", user=self.request.user,
                                   absolute=True, request=self.request)
-        return {"url": url}
+        return {
+            "url": url,
+            "subject": self.email_subject,
+            "content": "We received a request to verify your account. To proceed with the verification process, "
+                       "please follow the link below:",
+            "btn_label": "Verify",
+        }
 
     def get_success_url(self):
         token = token_generator.generate_token(user_id=self.request.user.id, path="email-link-send").make_token(
@@ -59,11 +64,11 @@ class MailSendDoneView(LoginRequiredMixin, PathTokenValidationMixin, generic.Tem
     render a template after successfully sending email with success message
     """
     pre_path = "email-link-send"
-    template_name = "common/mail-send-done.html"
+    template_name = "users/mail/send-done.html"
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data()
-        context.update({"email": self.request.user.email})
+        context.update({"message": f"An Email is sent to your email id - {self.request.user.email} with instructions"})
         return context
 
 
@@ -84,17 +89,21 @@ class VerificationSendOTPMail(LoginRequiredMixin, PathTokenValidationMixin, mail
     send an email with email verification otp
     """
     pre_path = "email-otp-c"
-    template_name = "verification/user-verify-email.html"
     send_html_email = True
     email_subject = "Account Verification"
-    email_template_name = "verification/user-verification-otp-mail.html"
+    email_template_name = "users/mail/otp.html"
 
     def get_to_email(self):
         return self.request.user.email
 
     def get_email_context_data(self):
         otp = get_object_or_redirect(model=OTPModel, id=self.request.session.get("OTP_ID"))
-        return {"otp": otp.otp}
+        return {
+            "otp": otp.otp,
+            "subject": self.email_subject,
+            "content": "You have requested to Verify your account. Please use the following OTP to proceed with the "
+                       "account verification:",
+        }
 
     def get_success_url(self):
         token = token_generator.generate_token(user_id=self.request.user.id, path="email-otp-send").make_token(
@@ -107,7 +116,7 @@ class VerifyAccountOTP(LoginRequiredMixin, PathTokenValidationMixin, otp_views.V
     verify the otp provided by the user
     """
     pre_path = "email-otp-send"
-    template_name = "common/user-verify-otp.html"
+    template_name = "users/common/verify-otp.html"
     model = OTPModel
     success_url = reverse_lazy("users:verification-update-status")
 

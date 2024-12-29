@@ -2,7 +2,6 @@ import datetime
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils import timezone
 
@@ -19,9 +18,23 @@ class User(AbstractUser):
         (STAFF, "staff"),
         (EXAMPLE_ROLE, "example role"),
     )
+    LOCK_NONE = 0
+    LOCK_TEMPORARY = 1
+    LOCK_PERMANENT = 2
+    LOCK_PENDING = 3
+    LOCK_STATUS = (
+        (LOCK_NONE, "not locked"),
+        (LOCK_TEMPORARY, "temporarily"),
+        (LOCK_PERMANENT, "permanently"),
+        (LOCK_PENDING, "pending lock verification"),
+    )
 
     role = models.PositiveSmallIntegerField(choices=ROLES, null=True, blank=True)
     email_verified = models.BooleanField(default=False, null=True)
+
+    login_attempts = models.PositiveSmallIntegerField(default=0)
+    is_locked = models.BooleanField(default=False)
+    lock_status = models.PositiveSmallIntegerField(default=0, choices=LOCK_STATUS)
 
     def is_email_verified(self):
         return self.email_verified
@@ -33,6 +46,21 @@ class User(AbstractUser):
         role = [r for r in self.ROLES if r[0] == self.role][0]
         return role
 
+    def increment_login_attempts(self):
+        if self.login_attempts == settings.LOGIN_ATTEMPT_LIMIT:
+            return self.lock_user()
+        self.login_attempts += 1
+        self.save()
+
+    def reset_login_attempts(self):
+        if self.login_attempts > 0:
+            self.login_attempts = 0
+
+    def lock_user(self):
+        self.is_locked = True
+        self.lock_status = self.LOCK_TEMPORARY
+        self.save()
+
 
 class OTPModel(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -43,7 +71,8 @@ class OTPModel(models.Model):
     def is_expired(self):
         return timezone.now() > self.expires
 
-    def get_otp_expiry(self):
+    @staticmethod
+    def get_otp_expiry():
         if settings.OTP_EXPIRY:
             return settings.OTP_EXPIRY
         return {"minutes": 30}
@@ -66,7 +95,8 @@ class TokenModel(models.Model):
     def is_expired(self):
         return timezone.now() > self.expires
 
-    def get_token_expiry(self):
+    @staticmethod
+    def get_token_expiry():
         if settings.TOKEN_EXPIRY:
             return settings.TOKEN_EXPIRY
         return {"minutes": 10}
