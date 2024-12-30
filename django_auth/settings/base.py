@@ -10,13 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-import os
 from pathlib import Path
-
-import environ
-
-env = environ.Env()
-environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-om%^9#@1zxumf4u#(0aeo!=ys1vv#iqibm^l+&f(-0@%z&)em)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -49,6 +43,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'users.middlewares.session.SessionSecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -92,6 +87,12 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
+PASSWORD_HASHERS = [
+    'users.hashers.argon2.Hasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -130,42 +131,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-LOGIN_URL = "users:login"
-LOGIN_REDIRECT_URL = "users:redirect-user"
-
-LOGIN_ATTEMPT_LIMIT = 5
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-EMAIL_USE_TLS = True
-
-TOKEN_EXPIRY = {
-    # "seconds": 10,
-    "minutes": 10
-}
-OTP_LENGTH = 6
-OTP_EXPIRY = {
-    "minutes": 30,
-}
-
-DEFAULT_USER_ROLE = 'EXAMPLE_ROLE'
-DEFAULT_USER_GROUP_NAME = 'example'
-
-if DEBUG:
-    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-
-GOOGLE_AUTH = {
-    'client_id': env('GOOGLE_CLIENT_ID'),
-    'client_secret_file': 'django_auth/client_secret.json',
-    'redirect_uri': f'http://127.0.0.1:8000/accounts/google/login/callback/',
-    "scopes": [
-        "openid",
-        "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/userinfo.profile",
-    ],
-    "access_type": 'offline',
-}

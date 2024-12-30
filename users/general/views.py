@@ -49,6 +49,7 @@ class LoginView(auth_views.LoginView):
 
     def form_valid(self, form):
         form.reset_login_attempts()
+        self.request.session.cycle_key()
         return super().form_valid(form)
 
     def form_invalid(self, form):
