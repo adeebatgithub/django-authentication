@@ -60,6 +60,14 @@ class UserRegistrationForm(auth_forms.UserCreationForm):
         model = get_user_model()
         fields = ("username", "email", "password1", "password2")
 
+    def clean(self):
+        clean_data = self.cleaned_data
+        email = clean_data.get("email")
+        user: users.models.User = get_if_exists(get_user_model(), email=email)
+        if user:
+            raise ValidationError("Email already exists")
+        return clean_data
+
 
 class ChangeUsernameForm(forms.ModelForm):
 

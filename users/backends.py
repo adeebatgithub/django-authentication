@@ -9,7 +9,6 @@ class UsernameAuthBackend(BaseBackend):
 
     def authenticate(self, request, **kwargs):
         user: users.models.User = get_if_exists(get_user_model(), username=kwargs.get("username"))
-        print("username backend")
         if not user:
             return None
         if not user.check_password(kwargs.get("password")):
@@ -26,7 +25,6 @@ class UsernameAuthBackend(BaseBackend):
 class EmailAuthBackend(BaseBackend):
 
     def authenticate(self, request, **kwargs):
-        print("email backend")
         user: users.models.User = get_if_exists(get_user_model(), email=kwargs.get("username"))
         if not user:
             return None

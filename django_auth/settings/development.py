@@ -1,5 +1,5 @@
-from .auth import *
 from .base import *
+import os
 
 DEBUG = True
 

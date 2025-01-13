@@ -72,23 +72,11 @@ class MailSendDoneView(LoginRequiredMixin, PathTokenValidationMixin, generic.Tem
         return context
 
 
-class VerificationOTPCreateView(LoginRequiredMixin, PathTokenValidationMixin, otp_views.OTPCreateView):
-    pre_path = "email-redirect"
-
-    def get_user_model(self):
-        return self.request.user
-
-    def get_success_url(self):
-        token = token_generator.generate_token(user_id=self.request.user.id, path="email-otp-c").make_token(
-            self.request.user)
-        return reverse_lazy("users:verification-send-mail-otp", kwargs={"token": token})
-
-
 class VerificationSendOTPMail(LoginRequiredMixin, PathTokenValidationMixin, mail_views.SendEmailView):
     """
     send an email with email verification otp
     """
-    pre_path = "email-otp-c"
+    pre_path = "email-redirect"
     send_html_email = True
     email_subject = "Account Verification"
     email_template_name = "users/mail/otp.html"
@@ -97,7 +85,13 @@ class VerificationSendOTPMail(LoginRequiredMixin, PathTokenValidationMixin, mail
         return self.request.user.email
 
     def get_email_context_data(self):
-        otp = get_object_or_redirect(model=OTPModel, id=self.request.session.get("OTP_ID"))
+        otp = OTPModel.objects.get_or_create(
+            user=self.request.user,
+            defaults={
+                "user": self.request.user,
+                "otp": otp_views.generate_otp(),
+            }
+        )
         return {
             "otp": otp.otp,
             "subject": self.email_subject,
@@ -143,6 +137,5 @@ class VerificationUpdateStatus(LoginRequiredMixin, View):
 
     def get(self, request):
         user = get_object_or_redirect(model=get_user_model(), id=request.user.id)
-        user.email_verified = True
-        user.save()
+        user.objects.update(email_verified=True)
         return redirect(self.get_success_url())

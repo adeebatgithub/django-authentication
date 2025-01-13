@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth import views as auth_views
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.http import urlsafe_base64_decode
-from django.views import generic, View
+from django.views import generic
 
 from users.django_mail import views as mail_views
 from users.models import OTPModel
@@ -97,33 +97,22 @@ class MailSendDoneView(PathTokenValidationMixin, generic.TemplateView):
         return context
 
 
-class ResetOTPCreateView(PathTokenValidationMixin, View):
-    pre_path = "reset-redirect"
-
-    def get_user_model(self):
-        return get_object_or_404(get_user_model(), email=self.request.session.get("USER_EMAIL"))
-
-    def get_success_url(self):
-        token = path_token_generator.generate_token(session_id=self.request.session.session_key, path="reset-otp-c")
-        return reverse_lazy("users:reset-send-otp-mail", kwargs={"token": token})
-
-    def get(self, request, *args, **kwargs):
-        user = self.get_user_model()
-        otp = OTPModel(user=user, otp=otp_views.generate_otp())
-        otp.save()
-        request.session["OTP_ID"] = otp.id
-        return redirect(self.get_success_url())
-
-
 class ResetSendOTPMail(ResetSendMail):
     """
     send OTP for verification
     """
-    pre_path = "reset-otp-c"
+    pre_path = "reset-redirect"
     email_template_name = "users/mail/otp.html"
 
     def get_email_context_data(self):
-        otp_model = get_object_or_404(OTPModel, id=self.request.session.pop("OTP_ID"))
+        user = get_object_or_404(get_user_model(), email=self.get_to_email())
+        otp_model = OTPModel.objects.get_or_create(
+            user=user,
+            defaults={
+                "user": user,
+                "otp": otp_views.generate_otp(),
+            }
+        )
         return {
             "otp": otp_model.otp,
             "subject": self.email_subject,

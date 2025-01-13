@@ -1,5 +1,5 @@
 from django.views.generic.edit import FormMixin as BaseFormMixin
-
+from braces.views import LoginRequiredMixin
 
 class FormMixin(BaseFormMixin):
     """

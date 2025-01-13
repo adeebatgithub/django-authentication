@@ -26,7 +26,7 @@ class SendEmailMixin:
             return settings.EMAIL_HOST_USER
 
         raise ImproperlyConfigured(
-            f"{self.__class__.__name__} missing from email id, define 'from_email' or 'settings.EMAIL_HOST_USER:'")
+            f"{self.__class__.__name__} missing from email id, define 'from_email' or 'settings.EMAIL_HOST_USER'")
 
     def get_email_template_name(self):
         if not self.email_template_name:

@@ -1,4 +1,3 @@
-from .auth import *
 from .base import *
 
 SECRET_KEY = os.environ.get("SECRET_KEY")

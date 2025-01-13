@@ -20,8 +20,6 @@ urlpatterns = [
     path('send-mail/link/done/<token>/', views.MailSendDoneView.as_view(), name='verification-mail-send-done'),
 
     # method - otp
-    # create otp
-    path('create-otp/<token>/', views.VerificationOTPCreateView.as_view(), name='verification-create-otp'),
     # send an email with an otp
     path('send-mail/otp/<token>/', views.VerificationSendOTPMail.as_view(), name='verification-send-mail-otp'),
     # verify otp

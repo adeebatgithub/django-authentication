@@ -9,6 +9,8 @@ urlpatterns = [
     path("verification/email/", include("users.email_verification.urls")),
     path("accounts/google/", include("users.google_auth.urls")),
     path("resolve/account/lock/", include("users.resolve_lock.urls")),
+    path("2FA/", include("users.auth_factor.urls")),
+    path("deletion/", include("users.user_deletion.urls")),
 
     # validators
     path("validate/username/<str:username>/", UserNameValidator.as_view()),

@@ -1,9 +1,8 @@
 from django.contrib.auth import logout, get_user_model
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views import generic, View
+from django.views import generic
 
 from users.django_mail import views as mail_views
 from users.models import OTPModel
@@ -24,7 +23,7 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
         token = token_generator.generate_token(user_id=self.request.user.id, path="change-redirect").make_token(
             self.request.user)
         if self.otp:
-            return reverse_lazy("users:change-create-otp", kwargs={"token": token})
+            return reverse_lazy("users:change-send-otp-mail", kwargs={"token": token})
         return reverse_lazy("users:change-send-link-mail", kwargs={"token": token})
 
 
@@ -69,37 +68,21 @@ class ChangeSendLinkMail(ChangeSendMail):
         return reverse_lazy("users:change-mail-send-done", kwargs={"token": token})
 
 
-class ChangeOTPCreateView(LoginRequiredMixin, PathTokenValidationMixin, View):
-    pre_path = "change-redirect"
-
-    def get_user_model(self):
-        return self.request.user
-
-    def get_success_url(self):
-        token = token_generator.generate_token(user_id=self.request.user.id, path="otp-create").make_token(
-            self.request.user)
-        return reverse_lazy("users:change-send-otp-mail", kwargs={"token": token})
-
-    def get(self, request, *args, **kwargs):
-        user = self.get_user_model()
-        otp = OTPModel(user=user, otp=otp_views.generate_otp())
-        otp.save()
-        request.session["OTP_ID"] = otp.id
-        return redirect(self.get_success_url())
-
-
 class ChangeSendOTPMail(ChangeSendMail):
     """
     send verification OTP to the users email
     """
-    pre_path = "otp-create"
+    pre_path = "change-redirect"
     email_template_name = "users/mail/otp.html"
 
     def get_email_context_data(self):
-        otp_id = self.request.session.pop("OTP_ID")
-        otp_model = OTPModel.objects.filter(id=otp_id).last()
-        if not otp_model:
-            return redirect(reverse_lazy("users:change-password-redirect"))
+        otp_model = OTPModel.objects.get_or_create(
+            user=self.request.user,
+            defaults={
+                "user": self.request.user,
+                "otp": otp_views.generate_otp(),
+            }
+        )
         return {
             "otp": otp_model.otp,
             "subject": self.email_subject,

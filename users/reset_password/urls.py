@@ -19,8 +19,6 @@ urlpatterns = [
     path('send-mail/done/<token>/', views.MailSendDoneView.as_view(), name='reset-mail-send-done'),
 
     # forgot password otp method
-    # create an otp model
-    path('create/otp/<token>/', views.ResetOTPCreateView.as_view(), name='reset-create-otp'),
     # send an email with an otp number
     path('send-mail/otp/<token>/', views.ResetSendOTPMail.as_view(), name='reset-send-otp-mail'),
     # verify otp

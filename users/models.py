@@ -36,8 +36,20 @@ class User(AbstractUser):
     is_locked = models.BooleanField(default=False)
     lock_status = models.PositiveSmallIntegerField(default=0, choices=LOCK_STATUS)
 
+    second_factor_verified = models.BooleanField(default=False)
+
     def is_email_verified(self):
         return self.email_verified
+
+    def verify_second_factor(self):
+        if not self.second_factor_verified:
+            self.second_factor_verified = True
+            self.save()
+
+    def unverify_second_factor(self):
+        if self.second_factor_verified:
+            self.second_factor_verified = False
+            self.save()
 
     def has_role(self, role):
         return self.role == role
@@ -82,9 +94,6 @@ class OTPModel(models.Model):
             self.expires = timezone.now() + datetime.timedelta(**self.get_otp_expiry())
         super(OTPModel, self).save(*args, **kwargs)
 
-    def __str__(self):
-        return f"{self.otp} | {self.is_expired()}"
-
 
 class TokenModel(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -107,4 +116,4 @@ class TokenModel(models.Model):
         super(TokenModel, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.id} | {self.token} | {self.expires} | {self.is_expired()}"
+        return f"{self.id} {self.expires} | {self.is_expired()}"
