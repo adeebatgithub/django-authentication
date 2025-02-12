@@ -51,6 +51,24 @@ INSTALLED_APPS = [
 ]
 ```
 
+#### **Authentication Backends**
+
+```python
+AUTHENTICATION_BACKENDS = [
+    "users.backends.UsernameAuthBackend",
+    "users.backends.EmailAuthBackend",
+    # ... other backends ...
+]
+```
+
+#### **Password Hasher**
+```python
+PASSWORD_HASHERS = [
+    'users.hashers.argon2.Hasher',
+    # ... other hashers ...
+]
+```
+
 #### **Login URLs**
 
 Set the login and redirect URLs:
@@ -58,6 +76,26 @@ Set the login and redirect URLs:
 ```python
 LOGIN_URL = "users:login"  # URL to the login page
 LOGIN_REDIRECT_URL = "users:redirect-user"  # URL to redirect post-login
+```
+
+#### **other URLs**
+
+Set the second factor verification starting url
+
+```python
+SECOND_FACTOR_VERIFICATION_URL = "users:email-factor"
+```
+
+Set the time for auto logout in seconds
+
+```python
+AUTO_LOGOUT_DELAY = 1209600
+```
+
+Set the maximum limit of login attempts
+
+```python
+LOGIN_ATTEMPT_LIMIT = 5
 ```
 
 #### **Default Role & Group**

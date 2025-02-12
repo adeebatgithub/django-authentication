@@ -27,7 +27,7 @@ DEFAULT_USER_GROUP_NAME = 'example'
 
 GOOGLE_AUTH = {
     'client_id': env('GOOGLE_CLIENT_ID'),
-    'client_secret_file': 'django_auth/client_secret.json',
+    'client_secret_file': env('GOOGLE_SECRET_FILE'),
     'redirect_uri': f'http://127.0.0.1:8000/accounts/google/login/callback/',
     "scopes": [
         "openid",
