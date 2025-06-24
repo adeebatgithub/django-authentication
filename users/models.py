@@ -4,19 +4,16 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
-
+from .managers import CustomUserManager
 
 class User(AbstractUser):
     # roles
     # role name = index number
-    # CUSTOMER = 1
-    # STAFF = 2
-    EXAMPLE_ROLE = 1
+    USER = 1
     STAFF = 2
     ROLES = (
-        # (CUSTOMER, "customer")
         (STAFF, "staff"),
-        (EXAMPLE_ROLE, "example role"),
+        (USER, "user"),
     )
     LOCK_NONE = 0
     LOCK_TEMPORARY = 1
@@ -29,14 +26,16 @@ class User(AbstractUser):
         (LOCK_PENDING, "pending lock verification"),
     )
 
-    role = models.PositiveSmallIntegerField(choices=ROLES, null=True, blank=True)
-    email_verified = models.BooleanField(default=False, null=True)
+    role = models.PositiveSmallIntegerField(choices=ROLES)
+    email_verified = models.BooleanField(default=False)
 
     login_attempts = models.PositiveSmallIntegerField(default=0)
     is_locked = models.BooleanField(default=False)
     lock_status = models.PositiveSmallIntegerField(default=0, choices=LOCK_STATUS)
 
     second_factor_verified = models.BooleanField(default=False)
+
+    objects = CustomUserManager()
 
     def is_email_verified(self):
         return self.email_verified
@@ -46,7 +45,7 @@ class User(AbstractUser):
             self.second_factor_verified = True
             self.save()
 
-    def unverify_second_factor(self):
+    def un_verify_second_factor(self):
         if self.second_factor_verified:
             self.second_factor_verified = False
             self.save()
@@ -58,20 +57,37 @@ class User(AbstractUser):
         role = [r for r in self.ROLES if r[0] == self.role][0]
         return role
 
+    def temporarily_lock_user(self):
+        self.is_locked = True
+        self.lock_status = self.LOCK_TEMPORARY
+        self.save()
+
+    def un_lock_user(self):
+        self.is_locked = False
+        self.lock_status = self.LOCK_NONE
+        self.save()
+
+    def permanently_lock_user(self):
+        self.is_locked = True
+        self.lock_status = self.LOCK_PERMANENT
+        self.save()
+
     def increment_login_attempts(self):
-        if self.login_attempts == settings.LOGIN_ATTEMPT_LIMIT:
-            return self.lock_user()
+        if self.login_attempts == settings.MIN_LOGIN_ATTEMPT_LIMIT:
+            return self.temporarily_lock_user()
+        if self.login_attempts == settings.MAX_LOGIN_ATTEMPT_LIMIT:
+            return self.permanently_lock_user()
+
         self.login_attempts += 1
         self.save()
 
     def reset_login_attempts(self):
         if self.login_attempts > 0:
             self.login_attempts = 0
+            self.save()
 
-    def lock_user(self):
-        self.is_locked = True
-        self.lock_status = self.LOCK_TEMPORARY
-        self.save()
+    def __str__(self):
+        return self.username
 
 
 class OTPModel(models.Model):

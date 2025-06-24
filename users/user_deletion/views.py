@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.views import generic
 
 from users.django_mail import views as mail_views
-from users.token_generators.user_token import token_generator, PathTokenValidationMixin
+from users.token.user_token import PathTokenValidationMixin, token_generator
 
 
 class DeleteUserSendMail(LoginRequiredMixin, mail_views.SendEmailView):
@@ -15,14 +15,16 @@ class DeleteUserSendMail(LoginRequiredMixin, mail_views.SendEmailView):
     """
     email_subject = "Delete User Request"
     send_html_email = True
-    email_template_name = "general/deletion-mail.html"
+    email_template_name = "users/user-deletion/mail.html"
     success_url = reverse_lazy("users:delete-mail-done")
 
     def get_to_email(self):
         return self.request.user.email
 
     def get_email_context_data(self):
-        url = reverse_lazy("users:delete-user-confirm")
+        token = token_generator.generate_token(user_id=self.request.user.id,
+                                                    path="user-deletion-mail").make_token(self.request.user)
+        url = reverse_lazy("users:delete-user-confirm", kwargs={"token": token})
         uri = self.request.build_absolute_uri(url)
         return {
             "url": uri,
@@ -34,41 +36,27 @@ class MailSendDoneView(LoginRequiredMixin, generic.TemplateView):
     """
     render a template after successfully sending email with success message
     """
-    template_name = "users/mail/send-done.html"
-
-    def get_context_data(self, *args, **kwargs):
-        email = self.request.user.email
-        context = super().get_context_data()
-        context.update({"message": f"An Email is sent to your email id - {email} with instructions"})
-        return context
+    template_name = "users/user-deletion/send-done.html"
 
 
-class DeleteUserConfirmation(LoginRequiredMixin, generic.TemplateView):
+class DeleteUserConfirmation(LoginRequiredMixin, PathTokenValidationMixin, generic.TemplateView):
     """
     confirm user delete or dont
     """
-    template_name = "users/general/delete-confirm.html"
+    pre_path = "user-deletion-mail"
+    template_name = "users/user-deletion/delete-confirm.html"
 
     def get_context_data(self, **kwargs):
         token = token_generator.generate_token(user_id=self.request.user.id,
-                                               path="delete-user-confirmation").make_token(self.request.user.id)
+                                                    path="delete-user-confirmation").make_token(self.request.user)
         delete_url = reverse_lazy("users:delete-user", kwargs={"token": token})
         decline_url = reverse_lazy("users:delete-user-decline", kwargs={"token": token})
-        print(delete_url, decline_url)
         context = super().get_context_data(**kwargs)
         context.update({
-            "delete_url": delete_url,
+            "accept_url": delete_url,
             "decline_url": decline_url
         })
         return context
-
-
-class DeleteUseDecline(LoginRequiredMixin, PathTokenValidationMixin, generic.RedirectView):
-    """
-    redirect user if delete confirmation declined
-    """
-    pre_path = "delete-user-confirmation"
-    url = reverse_lazy("users:redirect-user")
 
 
 class DeleteUser(LoginRequiredMixin, PathTokenValidationMixin, generic.DeleteView):
@@ -87,3 +75,11 @@ class DeleteUser(LoginRequiredMixin, PathTokenValidationMixin, generic.DeleteVie
 
     def get(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
+
+
+class DeleteUseDecline(LoginRequiredMixin, PathTokenValidationMixin, generic.RedirectView):
+    """
+    redirect user if delete confirmation declined
+    """
+    pre_path = "delete-user-confirmation"
+    url = reverse_lazy("users:redirect-user")

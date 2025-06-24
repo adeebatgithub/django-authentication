@@ -5,9 +5,9 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, resolve
-from django.views import View, generic
+from django.views import generic
 
-from users.utils import get_object_or_redirect
+from users.general.forms import UserRegistrationForm
 
 
 class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
@@ -68,13 +68,9 @@ class RedirectUserView(LoginRequiredMixin, generic.RedirectView):
             "RedirectLoggedUser needs dict of 'group_and_url' or 'role_and_url' or 'pattern_name'")
 
 
-class AddRole(View):
-    """
-    base implementation of adding a role to the user
-    inherit and define 'role' and 'success_url'
-    """
+class AddRoleMixin:
     role = None  # User.role
-    success_url = None
+    role_field = "role"
 
     def get_role(self):
         if self.role:
@@ -85,53 +81,98 @@ class AddRole(View):
 
         raise ImproperlyConfigured(f"{self.__class__.__name__} need a 'role'")
 
-    def get_success_url(self):
-        if self.success_url:
-            return self.success_url
-        raise ImproperlyConfigured(f"{self.__class__.__name__} needs 'success_url'")
-
-    def get_user_object(self):
-        return get_object_or_redirect(get_user_model(), id=self.request.session.get("user_id"))
-
-    def get(self, request, *args, **kwargs):
-        model = self.get_user_object()
-        model.role = self.get_role()
-        model.save()
-        return redirect(self.get_success_url())
+    def form_valid(self, form):
+        role = self.get_role()
+        setattr(form.instance, self.role_field, role)
+        return super().form_valid(form)
 
 
-class AddToGroup(View):
-    """
-    base implementation of adding a user to a group
-    inherit and define 'group_name' add 'success_url'
-    """
+class AddToGroupMixin:
     group_name = None
     model = Group
-    success_url = None
+
+    def get_group_model(self):
+        group_name = None
+
+        if self.group_name:
+            group_name = self.group_name
+        elif hasattr(settings, "DEFAULT_USER_GROUP_NAME"):
+            group_name = settings.DEFAULT_USER_GROUP_NAME  # Fixed: was using self.group_name
+        else:
+            raise ImproperlyConfigured(
+                f"{self.__class__.__name__} needs either a 'group_name' attribute "
+                f"or DEFAULT_USER_GROUP_NAME setting"
+            )
+
+        group, created = self.model.objects.get_or_create(name=group_name)
+        return group
+
+    def form_valid(self, form):
+        response = super().form_valid(form)  # Save the object first
+
+        # Add user to group after object is saved
+        group = self.get_group_model()
+        if hasattr(form.instance, 'groups'):  # Check if instance has groups (User model)
+            form.instance.groups.add(group)
+        else:
+            # Handle case where it's not a User model
+            raise ImproperlyConfigured(
+                f"Model {form.instance.__class__.__name__} doesn't have 'groups' attribute"
+            )
+
+        return response
+
+
+class BaseUserRegistrationView(generic.CreateView):
+    model = get_user_model()
+    form_class = UserRegistrationForm
+
+    role = None  # User.role
+    role_field = "role"
+
+    group_name = None
+    group_model = Group
+
+    def get_role(self):
+        if self.role:
+            return self.role
+
+        if hasattr(settings, "DEFAULT_USER_ROLE"):
+            return getattr(get_user_model(), settings.DEFAULT_USER_ROLE)
+
+        raise ImproperlyConfigured(f"{self.__class__.__name__} need a 'role'")
 
     def get_group_model(self):
         if self.group_name:
-            return get_object_or_redirect(self.model, name=self.group_name)
+            group_name = self.group_name
+        elif hasattr(settings, "DEFAULT_USER_GROUP_NAME"):
+            group_name = settings.DEFAULT_USER_GROUP_NAME  # Fixed: was using self.group_name
+        else:
+            raise ImproperlyConfigured(
+                f"{self.__class__.__name__} needs either a 'group_name' attribute "
+                f"or DEFAULT_USER_GROUP_NAME setting"
+            )
 
-        if hasattr(settings, "DEFAULT_USER_GROUP_NAME"):
-            return get_object_or_redirect(self.model, name=settings.DEFAULT_USER_GROUP_NAME)
-        raise ImproperlyConfigured(f"AddToGroup needs either a definition of 'group_name'")
+        group, created = self.group_model.objects.get_or_create(name=group_name)
+        return group
 
-    def get_success_url(self):
-        if self.success_url:
-            return self.success_url
-        raise ImproperlyConfigured(f"AddToGroup needs 'success_url'")
+    def form_valid(self, form):
+        role = self.get_role()
+        setattr(form.instance, self.role_field, role)
 
-    @staticmethod
-    def get_user_model(**kwargs):
-        return get_object_or_redirect(get_user_model(), **kwargs)
+        response = super().form_valid(form)  # Save the object first
 
-    def get(self, request, *args, **kwargs):
+        # Add user to group after object is saved
         group = self.get_group_model()
-        user_id = request.session.pop("user_id")
-        user = self.get_user_model(id=user_id)
-        user.groups.add(group)
-        return redirect(self.get_success_url())
+        if hasattr(form.instance, 'groups'):  # Check if instance has groups (User model)
+            form.instance.groups.add(group)
+        else:
+            # Handle case where it's not a User model
+            raise ImproperlyConfigured(
+                f"Model {form.instance.__class__.__name__} doesn't have 'groups' attribute"
+            )
+
+        return response
 
 
 class UpdateUser(LoginRequiredMixin, generic.UpdateView):

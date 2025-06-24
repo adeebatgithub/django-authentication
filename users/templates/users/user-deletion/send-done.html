@@ -1,0 +1,35 @@
+{% extends "users/common/base.html" %}
+{% block title %}Mail Sent{% endblock %}
+
+{% block content %}
+    <div class="signinform">
+        <h1>django-authentication</h1>
+        <!-- container -->
+        <div class="container">
+            <!-- main content -->
+            <div class="w3l-form-info">
+                <div class="w3_info text-center">
+                    <h2>Account Deletion Email Sent</h2>
+                    <p class="lead">
+                        We've sent a confirmation link to your registered email address.
+                    </p>
+                    <p>
+                        Please check your inbox (and spam folder) for the email. Click the link inside to confirm and
+                        finalize deletion of your account.
+                    </p>
+                    <p>
+                        If you didn't initiate this request, you can safely ignore the email and your account will
+                        remain unchanged.
+                    </p>
+                    <div class="mt-4">
+                        <a href="{% url 'users:redirect-user' %}">
+                            <button class="btn btn-primary btn-block">Go Back</button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- //main content -->
+        </div>
+        <!-- //container -->
+    </div>
+{% endblock %}

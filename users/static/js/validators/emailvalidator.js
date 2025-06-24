@@ -6,7 +6,7 @@ const EMAIL_REGEX = /^[a-zA-Z0-9._-]+@gmail\.com$/
 async function validateEmail(email) {
     let errorMessages = []
     if (!EMAIL_REGEX.test(email)) {
-        errorMessages.push('email is not valid.')
+        errorMessages.push('Enter a valid Email.')
     }
     async function isExists(email) {
         try {

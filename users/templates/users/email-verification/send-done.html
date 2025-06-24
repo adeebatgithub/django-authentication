@@ -1,0 +1,34 @@
+{% extends "users/common/base.html" %}
+{% block title %}Mail Sent{% endblock %}
+{% block content %}
+    <div class="signinform">
+        <h1>django-authentication</h1>
+        <!-- container -->
+        <div class="container">
+            <!-- main content -->
+            <div class="w3l-form-info">
+                <div class="w3_info text-center">
+                    <h2>Email Verification Sent</h2>
+                    <p class="lead">
+                        We've sent a verification link to your registered email address.
+                    </p>
+                    <p>
+                        Please check your inbox (and spam folder) for the verification email. Click the link inside to
+                        activate your account.
+                    </p>
+                    <p>
+                        Didn’t receive the email? You can request a new one by logging in and visiting your profile
+                        page.
+                    </p>
+                    <div class="mt-4">
+                        <a href="{% url 'users:redirect-user' %}">
+                            <button class="btn btn-primary btn-block">Go Back</button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- //main content -->
+        </div>
+        <!-- //container -->
+    </div>
+{% endblock %}

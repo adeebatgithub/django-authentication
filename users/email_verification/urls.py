@@ -24,6 +24,8 @@ urlpatterns = [
     path('send-mail/otp/<token>/', views.VerificationSendOTPMail.as_view(), name='verification-send-mail-otp'),
     # verify otp
     path('verify-otp/<token>/', views.VerifyAccountOTP.as_view(), name='verification-account-otp'),
+    # resend otp
+    path('resend-otp/', views.VerificationResendOTPMail.as_view(), name='verification-resend-mail-otp'),
 
     # verify email
     path(

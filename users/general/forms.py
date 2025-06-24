@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib.auth import forms as auth_forms, get_user_model
 from django.core.exceptions import ValidationError
 
@@ -13,8 +14,6 @@ class UserLoginForm(auth_forms.AuthenticationForm):
         self.fields["username"].widget.attrs["placeholder"] = "Username or Email"
         self.fields["password"].widget.attrs["placeholder"] = "Password"
 
-        self.error_messages["invalid_login"] = "Invalid username or password."
-
     class Meta:
         model = get_user_model()
         fields = ['username', 'password']
@@ -22,12 +21,13 @@ class UserLoginForm(auth_forms.AuthenticationForm):
     def clean(self):
         clean_data = self.cleaned_data
         username = clean_data.get("username")
+
         if "@" in username:
             where = {"email": username}
         else:
             where = {"username": username}
-        user: users.models.User = get_if_exists(get_user_model(), **where)
-        print(user.login_attempts)
+        user = get_if_exists(get_user_model(), **where)
+
         if user:
             if user.is_locked:
                 self.error_messages["account_locked"] = f"Your Account is locked {user.get_lock_status_display()}"
@@ -37,7 +37,15 @@ class UserLoginForm(auth_forms.AuthenticationForm):
                 )
             if not user.is_superuser:
                 user.increment_login_attempts()
-        return super().clean()
+
+        try:
+            return super().clean()
+        except ValidationError as e:
+            if user and 'invalid_login' in str(e.code):
+                login_attempts = getattr(user, 'login_attempts', 0)
+                error_message = f"Invalid username or password. Login attempts Left: {settings.MIN_LOGIN_ATTEMPT_LIMIT - login_attempts}"
+                raise ValidationError(error_message, code='invalid_login')
+            raise
 
     def reset_login_attempts(self):
         username = self.cleaned_data.get("username")

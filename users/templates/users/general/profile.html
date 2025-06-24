@@ -5,7 +5,7 @@
 {% block content %}
 	<div class="signinform">
         {% if not user.has_usable_password %}
-        	<p>Your are not set a password set password <a href="#">here</a></p>
+        	<p>Your are not set a password set password <a href="{% url 'users:set-password' %}">here</a></p>
         {% endif %} 
         <div class="container">
             <a href="{% url 'users:change-username' username=user.username %}">

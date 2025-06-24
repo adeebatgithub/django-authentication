@@ -6,7 +6,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.views import View
 
 
-class RoleChangeView(View):
+class BaseRoleChangeView(View):
     role_name = None
     group_name = None
     success_url = None
@@ -38,14 +38,11 @@ class RoleChangeView(View):
         previous = user.groups.all()
         for group in previous:
             user.groups.remove(group)
-        group = get_object_or_404(Group, name=self.get_group_name())
+        group, _ = Group.objects.get_or_create(name=self.get_group_name())
         user.groups.add(group)
 
     def get(self, request, **kwargs):
         user = self.get_user_model()
         self.set_role(user)
         self.add_to_group(user)
-        request.session["USER_NAME"] = user.username
-        request.session["USER_EMAIL"] = user.email
-        request.session["ROLE"] = self.get_role_name()
         return redirect(self.get_success_url())

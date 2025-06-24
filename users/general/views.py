@@ -1,10 +1,10 @@
-from django.contrib.auth import views as auth_views, get_user_model
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import generic
 
-from users.auth_factor.mixins import MultiFactorVerificationRequiredMixin
+from users.second_factor_auth.mixins import MultiFactorVerificationRequiredMixin
 from . import forms, base_views
 
 
@@ -70,39 +70,22 @@ class LogoutView(auth_views.LogoutView):
         return self.success_url
 
     def get(self, request, *args, **kwargs):
-        request.user.unverify_second_factor()
+        request.user.un_verify_second_factor()
         return super().post(request, *args, **kwargs)
 
 
-class RegisterView(generic.CreateView):
+class RegisterView(base_views.BaseUserRegistrationView):
     """
     User creation/registration view
 
     regular user is created and redirected to add the user in to a group
     """
-    model = get_user_model()
     template_name = "users/general/register.html"
-    form_class = forms.UserRegistrationForm
-    success_url = reverse_lazy("users:add-example-role")
+    success_url = reverse_lazy("users:login")
 
     def get_success_url(self, *args, **kwargs):
         self.request.session["user_id"] = self.object.id
         return self.success_url
-
-
-class AddExampleRole(base_views.AddRole):
-    """
-    give users the specified role     is specified in settings.DEFAULT_USER_ROLE
-    """
-    success_url = reverse_lazy("users:add-to-example-group")
-
-
-class AddToExampleGroup(base_views.AddToGroup):
-    """
-    add users to the specified group,
-    group name is specified in settings.DEFAULT_USER_GROUP_NAME
-    """
-    success_url = reverse_lazy("users:redirect-user")
 
 
 class ChangeUsername(base_views.UpdateUser):
