@@ -1,34 +1,43 @@
 {% extends "users/common/base.html" %}
 {% block title %}Mail Sent{% endblock %}
+
 {% block content %}
-    <div class="signinform">
-        <h1>django-authentication</h1>
-        <!-- container -->
-        <div class="container">
-            <!-- main content -->
-            <div class="w3l-form-info">
-                <div class="w3_info text-center">
-                    <h2>Email Verification Sent</h2>
-                    <p class="lead">
-                        We've sent a verification link to your registered email address.
-                    </p>
-                    <p>
-                        Please check your inbox (and spam folder) for the verification email. Click the link inside to
-                        activate your account.
-                    </p>
-                    <p>
-                        Didn’t receive the email? You can request a new one by logging in and visiting your profile
-                        page.
-                    </p>
-                    <div class="mt-4">
-                        <a href="{% url 'users:redirect-user' %}">
-                            <button class="btn btn-primary btn-block">Go Back</button>
-                        </a>
+    <div class="container d-flex flex-column min-vh-100 justify-content-center align-items-center py-4">
+
+        <div class="card shadow-sm border-0" style="max-width: 500px; width: 100%;">
+            <div class="card-body p-5 text-center">
+
+                <div class="mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-light text-primary rounded-circle"
+                         style="width: 100px; height: 100px;">
+                        <i class="fas fa-envelope-open-text fa-3x"></i>
                     </div>
                 </div>
+
+                <h1 class="h3 mb-3">Check your Inbox</h1>
+
+                <p class="text-muted mb-4">
+                    We've sent a verification link to your registered email address.
+                    Please check your inbox (and spam folder) to activate your account.
+                </p>
+
+                <div class="d-grid gap-2 mb-4">
+                    <a href="{% url 'users:redirect-user' %}" class="btn btn-primary py-2">
+                        <i class="fas fa-arrow-left me-2"></i> Go Back
+                    </a>
+                </div>
+
+                <div class="border-top pt-3">
+                    <p class="small text-muted mb-0">
+                        Didn’t receive the email? <br>
+                        You can request a new one by visiting your <a href="{% url 'users:redirect-user' %}"
+                                                                      class="text-decoration-none fw-bold">profile
+                        page</a>.
+                    </p>
+                </div>
+
             </div>
-            <!-- //main content -->
         </div>
-        <!-- //container -->
+
     </div>
 {% endblock %}

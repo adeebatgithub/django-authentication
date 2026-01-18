@@ -1,41 +1,105 @@
 {% extends "users/common/base.html" %}
-{% block title %}
-	Profile
-{% endblock %}
+{% block title %} Profile {% endblock %}
+
 {% block content %}
-	<div class="signinform">
-        {% if not user.has_usable_password %}
-        	<p>Your are not set a password set password <a href="{% url 'users:set-password' %}">here</a></p>
-        {% endif %} 
-        <div class="container">
-            <a href="{% url 'users:change-username' username=user.username %}">
-                <div>
-                    User name : {{ user.username }}
+    <div class="container d-flex flex-column min-vh-100 justify-content-center align-items-center py-4">
+
+        <div class="card shadow-sm border-0" style="max-width: 500px; width: 100%;">
+
+            <div class="card-header bg-transparent border-0 text-center pt-4 pb-2">
+                <div class="mb-3">
+                <span class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center text-secondary"
+                      style="width: 80px; height: 80px;">
+                    <i class="fas fa-user fa-3x"></i>
+                </span>
                 </div>
-            </a>
-            <a href="{% url 'users:change-fullname' username=user.username %}">
-                <div>
-                    Full name : {{ user.first_name }} {{ user.last_name }}
-                </div>
-            </a>
-            <div {% if not user.email_verified %} style="color: red" {% endif %}>
-                <a href="{% url 'users:change-email' username=user.username %}">
-                    Email : {{ user.email }}
-                </a>
-                {% if not user.email %}
-                    <a href="">add email</a>
-                {% else %}
-                    {% if not user.email_verified %}
-					<a href="{% url 'users:verification-email-redirect' %}">verify email</a>
-                    {% endif %}
-                {% endif %}
+                <h1 class="h3 mb-0">{{ user.username }}</h1>
+                <p class="text-muted small">User Profile</p>
             </div>
-            <div>
-                <a href="{% url 'users:change-password-redirect' %}"><button class="btn btn-primary btn-block" type="submit">Change password</button></a>
-                <a href="{% url 'users:role-send-mail' role="STAFF" %}"><button class="btn btn-primary btn-block" type="submit">Change Role</button></a>
-                <a href="{% url 'users:logout' %}"><button class="btn btn-primary btn-block" type="submit">Logout</button></a>
-                <a href="{% url 'users:delete-send-mail' %}"><button class="btn btn-primary btn-block" type="submit">Delete</button></a>
+
+            <div class="card-body p-4">
+
+                {% if not user.has_usable_password %}
+                    <div class="alert alert-warning d-flex align-items-center small" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <div>
+                            You have not set a password yet.
+                            <a href="{% url 'users:set-password' %}" class="alert-link">Set password here</a>.
+                        </div>
+                    </div>
+                {% endif %}
+
+                <ul class="list-group list-group-flush rounded-3 border mb-4">
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <span class="text-muted small"><i class="fas fa-id-card me-2"></i>Full Name</span>
+                        <span class="fw-medium">
+                        {% if user.first_name or user.last_name %}
+                            {{ user.first_name }} {{ user.last_name }}
+                        {% else %}
+                            <em class="text-muted font-italic">Not set</em>
+                        {% endif %}
+                    </span>
+                    </li>
+
+                    <li class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small"><i class="fas fa-envelope me-2"></i>Email</span>
+                            <span class="fw-medium">{{ user.email|default:"No email provided" }}</span>
+                        </div>
+
+                        <div class="text-end">
+                            {% if not user.email %}
+                                <a href="#" class="badge bg-primary text-decoration-none">
+                                    <i class="fas fa-plus me-1"></i> Add Email
+                                </a>
+                            {% else %}
+                                {% if not user.email_verified %}
+                                    <span class="badge bg-danger mb-1">Unverified</span>
+                                    <br>
+                                    <a href="{% url 'users:verification-email-redirect' %}"
+                                       class="small text-danger text-decoration-underline">
+                                        Send Verification Email
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i> Verified
+                                </span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </li>
+                </ul>
+
+                <h6 class="text-muted small text-uppercase fw-bold mb-3">Account Actions</h6>
+
+                <div class="d-grid gap-2">
+                    <a href="{% url 'users:change-password-redirect' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-key me-2"></i> Change Password
+                    </a>
+
+                    <a href="{% url 'users:role-send-mail' role="STAFF" %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-user-tag me-2"></i> Request Staff Role
+                    </a>
+
+                    <hr class="text-muted my-2">
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <a href="{% url 'users:logout' %}" class="btn btn-warning w-100">
+                                <i class="fas fa-sign-out-alt me-1"></i> Logout
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'users:delete-send-mail' %}" class="btn btn-danger w-100">
+                                <i class="fas fa-trash-alt me-1"></i> Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
+
     </div>
 {% endblock %}

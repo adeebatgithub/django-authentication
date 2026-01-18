@@ -1,45 +1,55 @@
 {% extends "users/common/base.html" %}
 {% block title %} Login {% endblock %}
+
 {% block content %}
-<div class="signinform">
-    <h1>django-authentication</h1>
-    <!-- container -->
-    <div class="container">
-        <!-- main content -->
-        <div class="w3l-form-info">
-            <div class="w3_info">
-                <h2>Login</h2>
-                <form method="post">
-					{% csrf_token %}
-                    {% include "users/common/form.html" with form=form %}
-                    <div class="form-row bottom">
-                    <div class="form-check">
-                        <input type="checkbox" id="remenber" name="remenber" value="remenber">
-                        <label for="remenber"> Remember me?</label>
-                    </div>
-					<a href="{% url 'users:password-reset' %}" class="forgot">Forgot password?</a>
-                    </div>
-                    <button class="btn btn-primary btn-block" type="submit">Login</button>
-                </form>
-                <p class="continue"><span>or Login with</span></p>
-                <div class="social-login">
-                    <a href="{% url 'users:google-login' %}">
-                        <div class="google">
-                            <span class="fab fa-google" aria-hidden="true"></span>
-                        </div>
-                    </a>
+    <div class="container d-flex flex-column min-vh-100 justify-content-center align-items-center py-4">
+
+        <div class="card shadow-sm border-0" style="max-width: 450px; width: 100%;">
+            <div class="card-body p-4 p-md-5">
+
+                <div class="text-center mb-4">
+                    <h1 class="h3 mb-3 fw-normal">django-auth</h1>
+                    <h2 class="h5 text-muted">Please sign in</h2>
                 </div>
-				<p class="account">Don't have an account? <a href="{% url 'users:signup' %}">Sign up</a></p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        {% include "users/common/form.html" with form=form %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="remember" name="remember"
+                                   value="remember">
+                            <label class="form-check-label text-secondary" for="remember">Remember me</label>
+                        </div>
+                        <a href="{% url 'users:password-reset' %}" class="text-decoration-none small">Forgot
+                            password?</a>
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-2 mb-3" type="submit">Login</button>
+
+                    <div class="position-relative text-center my-4">
+                        <hr class="text-secondary opacity-25">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">or continue with</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'users:google-login' %}" class="btn btn-outline-danger">
+                            <i class="fab fa-google me-2"></i> Google
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-footer bg-light border-0 text-center py-3">
+                <p class="mb-0 text-muted small">
+                    Don't have an account? <a href="{% url 'users:signup' %}" class="text-decoration-none fw-bold">Sign
+                    up</a>
+                </p>
             </div>
         </div>
-        <!-- //main content -->
     </div>
-    <!-- //container -->
-    <!-- footer -->
-    <div class="footer">
-        <p>&copy; 2020 Service login form. All Rights Reserved | Design by <a href="https://w3layouts.com/"
-                target="blank">W3layouts</a></p>
-    </div>
-    <!-- footer -->
-</div>
 {% endblock %}

@@ -1,44 +1,49 @@
 {% extends "users/common/base.html" %}
 {% block title %} Register {% endblock %}
+
 {% block content %}
-<div class="signinform">
-    <h1>django-authentication</h1>
-    <!-- container -->
-    <div class="container">
-        <!-- main content -->
-        <div class="w3l-form-info">
-            <div class="w3_info">
-                <h2>Register</h2>
-                <form method="post">
-					{% csrf_token %}
-                    {% include "users/common/form.html" with form=form %}
-                    <button class="btn btn-primary btn-block" type="submit" id="btn-register">Register</button>
-                </form>
-                <p class="continue"><span>or register with</span></p>
-                <div class="social-login">
-                    <a href="#google">
-                        <div class="google">
-                            <span class="fab fa-google" aria-hidden="true"></span>
-                        </div>
-                    </a>
+    <div class="container d-flex flex-column min-vh-100 justify-content-center align-items-center py-4">
+
+        <div class="card shadow-sm border-0" style="max-width: 450px; width: 100%;">
+            <div class="card-body p-4 p-md-5">
+
+                <div class="text-center mb-4">
+                    <h1 class="h3 mb-3 fw-normal">django-auth</h1>
+                    <h2 class="h5 text-muted">Create an account</h2>
                 </div>
-				<p class="account">Already have an account? <a href="{% url 'users:login' %}">Login</a></p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        {% include "users/common/form.html" with form=form %}
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-2 mb-3" type="submit" id="btn-register">Register</button>
+
+                    <div class="position-relative text-center my-4">
+                        <hr class="text-secondary opacity-25">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">or register with</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="#google" class="btn btn-outline-danger">
+                            <i class="fab fa-google me-2"></i> Google
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-footer bg-light border-0 text-center py-3">
+                <p class="mb-0 text-muted small">
+                    Already have an account? <a href="{% url 'users:login' %}" class="text-decoration-none fw-bold">Login</a>
+                </p>
             </div>
         </div>
-        <!-- //main content -->
+
+        <div class="mt-4 text-center text-muted small">
+            <p>&copy; 2020 Service login form. All Rights Reserved.</p>
+        </div>
+
     </div>
-    <!-- //container -->
-    <!-- footer -->
-    <div class="footer">
-        <p>&copy; 2020 Service login form. All Rights Reserved | Design by <a href="https://w3layouts.com/"
-                target="blank">W3layouts</a></p>
-    </div>
-    <!-- footer -->
-</div>
-{% endblock %}
-{% block scripts %}
-    {% load static %}
-	<script src="{% static "/js/validators/usernamevalidator.js" %}"></script>
-	<script src="{% static "/js/validators/emailvalidator.js" %}"></script>
-	<script src="{% static "/js/validators/passwordvalidator.js" %}"></script>
 {% endblock %}

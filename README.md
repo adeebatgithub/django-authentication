@@ -47,7 +47,7 @@ Add `users` app to your `INSTALLED_APPS`:
 ```python
 INSTALLED_APPS = [
     # ... other apps ...
-    'users.apps.UsersConfig',  # Your users app
+    'users.apks.UsersConfig',  # Your users app
 ]
 ```
 

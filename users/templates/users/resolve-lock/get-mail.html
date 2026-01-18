@@ -2,33 +2,51 @@
 {% block title %}Account Locked{% endblock %}
 
 {% block content %}
-    <div class="signinform">
-        <h1>django-authentication</h1>
-        <!-- container -->
-        <div class="container">
-            <!-- main content -->
-            <div class="w3l-form-info">
-                <div class="w3_info">
-                    <h2>Account Locked</h2>
+    <div class="container d-flex flex-column min-vh-100 justify-content-center align-items-center py-4">
 
-                    <p class="mb-3 text-danger">
-                        Your account has been temporarily locked due to too many failed login attempts.
+        <div class="card shadow-sm border-0" style="max-width: 450px; width: 100%;">
+            <div class="card-body p-4 p-md-5">
+
+                <div class="text-center mb-4">
+                    <h1 class="h3 mb-3 fw-normal">Account Locked</h1>
+
+                    <div class="mb-3">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle"
+                          style="width: 80px; height: 80px;">
+                        <i class="fas fa-lock fa-3x"></i>
+                    </span>
+                    </div>
+
+                    <h2 class="h5 text-danger">Too many failed attempts</h2>
+                    <p class="text-muted small mt-2">
+                        For your security, your account has been temporarily locked.
                     </p>
-
-                    <p class="mb-3">
-                        Please enter your registered email address below. We’ll send you a link to verify your identity
-                        and unlock your account.
-                    </p>
-
-                    <form method="post" novalidate>
-                        {% csrf_token %}
-                        {% include "users/common/form.html" with form=form %}
-                        <button class="btn btn-primary btn-block mt-3" type="submit">Send Unlock Link</button>
-                    </form>
                 </div>
+
+                <div class="alert alert-light border text-center small text-muted mb-4">
+                    Please enter your registered email address below. We’ll send you a link to verify your identity and
+                    unlock your account.
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        {% include "users/common/form.html" with form=form %}
+                    </div>
+
+                    <button class="btn btn-danger w-100 py-2 mb-3" type="submit">
+                        Send Unlock Link
+                    </button>
+                </form>
             </div>
-            <!-- //main content -->
+
+            <div class="card-footer bg-light border-0 text-center py-3">
+                <a href="{% url 'users:login' %}" class="small text-decoration-none text-muted">
+                    <i class="fas fa-arrow-left me-1"></i> Return to Login
+                </a>
+            </div>
         </div>
-        <!-- //container -->
+
     </div>
 {% endblock %}

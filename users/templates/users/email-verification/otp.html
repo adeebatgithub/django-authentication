@@ -1,305 +1,158 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your OTP Code</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Your Verification Code</title>
+    <style type="text/css">
+        /* Client-specific resets */
+        body, table, td, a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333333;
-            background-color: #f4f4f4;
-            padding: 20px;
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
         }
 
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+        img {
+            -ms-interpolation-mode: bicubic;
         }
 
-        .header {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-
-        .content {
-            padding: 40px 30px;
-        }
-
-        .greeting {
-            font-size: 18px;
-            margin-bottom: 20px;
-            color: #2c3e50;
-        }
-
-        .message {
-            font-size: 16px;
-            margin-bottom: 30px;
-            color: #555555;
-            line-height: 1.7;
-        }
-
-        .otp-container {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .otp-label {
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.9;
-        }
-
-        .otp-code {
-            background-color: white;
-            color: #333333;
-            font-size: 36px;
-            font-weight: 700;
-            letter-spacing: 8px;
-            padding: 20px;
-            border-radius: 8px;
-            display: inline-block;
-            font-family: 'Courier New', monospace;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin: 0 auto;
-            min-width: 200px;
-        }
-
-        .copy-btn {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            margin-top: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-block;
-            text-decoration: none;
-        }
-
-        .copy-btn:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .timer-info {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 25px 0;
-            text-align: center;
-        }
-
-        .timer-info .timer-icon {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #856404;
-        }
-
-        .timer-info p {
-            font-size: 16px;
-            color: #856404;
-            margin: 0;
-            font-weight: 500;
-        }
-
-        .timer-info .timer-text {
-            font-size: 14px;
-            color: #6c5714;
-            margin-top: 5px;
-        }
-
-        .security-notice {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-
-        .security-notice p {
-            font-size: 14px;
-            color: #721c24;
-            margin: 0;
-        }
-
-        .security-notice strong {
-            color: #491217;
-        }
-
-        .help-section {
-            background-color: #e7f3ff;
-            border-left: 4px solid #0066cc;
-            padding: 20px;
-            margin: 25px 0;
-        }
-
-        .help-section h3 {
-            color: #0066cc;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-
-        .help-section p {
-            font-size: 14px;
-            color: #004c99;
-            margin: 0;
-        }
-
-        .footer {
-            background-color: #f8f9fa;
-            padding: 30px;
-            text-align: center;
-            border-top: 1px solid #e9ecef;
-        }
-
-        .footer p {
-            font-size: 14px;
-            color: #6c757d;
-            margin-bottom: 10px;
-        }
-
-        .footer .company-info {
-            font-size: 12px;
-            color: #adb5bd;
-            margin-top: 20px;
-        }
-
-        @media only screen and (max-width: 600px) {
+        /* Responsive Styles */
+        @media screen and (max-width: 600px) {
             .email-container {
-                margin: 0;
-                border-radius: 0;
+                width: 100% !important;
             }
 
-            .header, .content, .footer {
-                padding: 20px;
+            .content-padding {
+                padding: 20px !important;
             }
 
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .otp-code {
-                font-size: 28px;
-                letter-spacing: 4px;
-                padding: 15px;
-                min-width: 150px;
-            }
-
-            .otp-container {
-                padding: 20px;
+            .otp-font {
+                font-size: 28px !important;
+                letter-spacing: 4px !important;
             }
         }
     </style>
 </head>
-<body>
-<div class="email-container">
-    <div class="header">
-        <h1>Verification Code</h1>
-        <p>Your secure access code is ready</p>
-    </div>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 
-    <div class="content">
-        <div class="greeting">
-            Hello {{ user }},
-        </div>
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;">
+    <tr>
+        <td align="center" style="padding: 40px 10px;">
 
-        <div class="message">
-            We received a request to verify your account. Please use the One-Time Password (OTP) below to complete your
-            verification.
-        </div>
+            <table border="0" cellpadding="0" cellspacing="0" width="600" class="email-container"
+                   style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
 
-        <div class="otp-container">
-            <div class="otp-label">Your OTP Code</div>
-            <div class="otp-code">{{ otp }}</div>
-            <div class="copy-btn" onclick="copyOTP()">📋 Copy Code</div>
-        </div>
+                <tr>
+                    <td align="center" style="background-color: #4CAF50; padding: 40px 30px; color: #ffffff;">
+                        <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);"><h1
+                                style="margin: 0; font-size: 28px; font-weight: 600; font-family: 'Segoe UI', sans-serif;">
+                            Verification Code</h1>
+                            <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Your secure access code is
+                                ready</p>
+                        </div>
+                    </td>
+                </tr>
 
-        <div class="timer-info">
-            <div class="timer-icon">⏰</div>
-            <p>This code expires in 10 minutes</p>
-            <div class="timer-text">Please complete verification before it expires</div>
-        </div>
+                <tr>
+                    <td class="content-padding" style="padding: 40px 30px;">
 
-        <div class="security-notice">
-            <p><strong>Security Alert:</strong> Never share this code with anyone. Our team will never ask for your OTP
-                code via phone, email, or text message.</p>
-        </div>
+                        <p style="margin: 0 0 20px; font-size: 18px; color: #2c3e50; font-weight: 600;">
+                            Hello {{ user }},
+                        </p>
 
-        <div class="help-section">
-            <h3>Didn't request this code?</h3>
-            <p>If you didn't initiate this verification, please ignore this email or contact our support team
-                immediately if you suspect unauthorized access to your account.</p>
-        </div>
+                        <p style="margin: 0 0 30px; font-size: 16px; color: #555555; line-height: 1.7;">
+                            We received a request to verify your account. Please use the One-Time Password (OTP) below
+                            to complete your verification.
+                        </p>
 
-        <div class="message">
-            Enter this code in the verification field on our website or app to proceed. If you're having trouble, our
-            support team is here to help.
-        </div>
-    </div>
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 30px;">
+                            <tr>
+                                <td align="center"
+                                    style="background-color: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 30px;">
 
-    <div class="footer">
-        <p>Thanks for keeping your account secure!</p>
-        <p>Best regards,<br>The [Company Name] Team</p>
+                                    <p style="color: #ffffff; font-size: 14px; font-weight: 500; margin: 0 0 15px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9;">
+                                        Your OTP Code
+                                    </p>
 
-        <div class="company-info">
-            <p>[Company Name] | [Company Address]</p>
-            <p>© 2025 [Company Name]. All rights reserved.</p>
-        </div>
-    </div>
-</div>
+                                    <div style="background-color: #ffffff; color: #333333; padding: 20px; border-radius: 8px; display: inline-block; min-width: 200px;">
+                                            <span class="otp-font"
+                                                  style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 700; letter-spacing: 8px;">
+                                                {{ otp }}
+                                            </span>
+                                    </div>
 
-<script>
-    function copyOTP() {
-        const otpCode = document.querySelector('.otp-code').textContent;
-        navigator.clipboard.writeText(otpCode.trim()).then(function () {
-            const btn = document.querySelector('.copy-btn');
-            const originalText = btn.textContent;
-            btn.textContent = '✓ Copied!';
-            setTimeout(() => {
-                btn.textContent = originalText;
-            }, 2000);
-        }).catch(function () {
-            // Fallback for older browsers
-            alert('OTP Code: ' + otpCode.trim());
-        });
-    }
-</script>
+                                    <p style="color: #ffffff; font-size: 12px; margin: 15px 0 0; opacity: 0.8;">
+                                        (Valid for 10 minutes)
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 25px;">
+                            <tr>
+                                <td style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; text-align: center;">
+                                    <span style="font-size: 24px;">⏰</span>
+                                    <p style="font-size: 16px; color: #856404; margin: 5px 0 0; font-weight: 500;">
+                                        This code expires in 10 minutes
+                                    </p>
+                                    <p style="font-size: 14px; color: #856404; margin: 5px 0 0;">
+                                        Please complete verification before it expires
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 25px;">
+                            <tr>
+                                <td style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 6px; padding: 15px;">
+                                    <p style="font-size: 14px; color: #721c24; margin: 0; line-height: 1.5;">
+                                        <strong>Security Alert:</strong> Never share this code with anyone. Our team
+                                        will never ask for your OTP code via phone, email, or text message.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px;">
+                            <tr>
+                                <td style="background-color: #e7f3ff; border-left: 4px solid #0066cc; padding: 20px;">
+                                    <h3 style="color: #0066cc; font-size: 16px; margin: 0 0 10px;">Didn't request this
+                                        code?</h3>
+                                    <p style="font-size: 14px; color: #004c99; margin: 0; line-height: 1.5;">
+                                        If you didn't initiate this verification, please ignore this email or contact
+                                        support immediately.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="background-color: #f8f9fa; border-top: 1px solid #e9ecef; padding: 30px; text-align: center;">
+                        <p style="margin: 0 0 10px; font-size: 14px; color: #6c757d;">
+                            Thanks for keeping your account secure!
+                        </p>
+                        <p style="margin: 0 0 20px; font-size: 14px; color: #6c757d;">
+                            Best regards,<br>The [Company Name] Team
+                        </p>
+                        <div style="font-size: 12px; color: #adb5bd; margin-top: 20px;">
+                            <p style="margin: 5px 0;">[Company Name] | [Company Address]</p>
+                            <p style="margin: 5px 0;">© 2025 [Company Name]. All rights reserved.</p>
+                        </div>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+
 </body>
 </html>

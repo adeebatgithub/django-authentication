@@ -15,7 +15,9 @@ from pathlib import Path
 from environ import Env
 
 env = Env()
-env.read_env()
+env.read_env(
+    DEBUG=(bool, False)
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,12 +26,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-om%^9#@1zxumf4u#(0aeo!=ys1vv#iqibm^l+&f(-0@%z&)em)'
+SECRET_KEY = env.str("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", [])
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -88,14 +90,11 @@ DATABASES = {
 
 AUTHENTICATION_BACKENDS = [
     "users.backends.UsernameAuthBackend",
-    "users.backends.EmailAuthBackend",
-    "django.contrib.auth.backends.ModelBackend",
+    # "users.backends.EmailAuthBackend",
 ]
 
 PASSWORD_HASHERS = [
-    'users.django_hashers.argon2.Hasher',
-    'django.contrib.auth.hashers.Argon2PasswordHasher',
-    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    'users.utilities.hashers.argon2.Hasher',
 ]
 
 # Password validation
@@ -142,12 +141,13 @@ LOGIN_REDIRECT_URL = "users:redirect-user"  # URL to redirect post-login
 
 SECOND_FACTOR_VERIFICATION_URL = "users:email-factor"
 
+LOCK_USER = True
+
 AUTO_LOGOUT_DELAY = 1209600
 
 MIN_LOGIN_ATTEMPT_LIMIT = 5
 MAX_LOGIN_ATTEMPT_LIMIT = 20
 
-DEFAULT_USER_ROLE = 'USER'  # Assign a default role to new users. Ex; 'EXAMPLE_ROLE'
 DEFAULT_USER_GROUP_NAME = 'users'  # Add new users to this default group
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -156,6 +156,7 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")  # Your Gmail ID
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")  # Google app password (use an app-specific password)
 EMAIL_USE_TLS = True
+EMAIL_OTP_NOT_LINK = False
 
 # Token expiry configuration in minutes, hours, etc.
 TOKEN_EXPIRY = {

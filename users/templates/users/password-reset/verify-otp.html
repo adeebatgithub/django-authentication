@@ -2,41 +2,60 @@
 {% block title %}Verify OTP{% endblock %}
 
 {% block content %}
-    <div class="signinform">
-        <h1 class="text-center">Confirm Password Change</h1> <!-- Page Main Title -->
+    <div class="container d-flex flex-column min-vh-100 justify-content-center align-items-center py-4">
 
-        <!-- container -->
-        <div class="container">
-            <!-- main content -->
-            <div class="w3l-form-info">
-                <div class="w3_info">
-                    <h2 class="mb-3">Enter the One-Time Password (OTP)</h2>
+        <div class="card shadow-sm border-0" style="max-width: 450px; width: 100%;">
+            <div class="card-body p-4 p-md-5">
 
-                    <p class="mb-3">
-                        We've sent a verification code to your registered email address. Please enter the OTP below to
-                        confirm your password change.
-                    </p>
-
-                    <form method="post" novalidate>
-                        {% csrf_token %}
-                        {% include "users/common/form.html" with form=form %}
-                        <button class="btn btn-primary btn-block mt-3" type="submit">Verify</button>
-                    </form>
-
-                    <div class="mt-3">
-                        <p>
-                            Didn't receive the code?
-                            <a href="{% url 'users:reset-resend-otp-mail' %}">Resend OTP</a>
-                        </p>
+                <div class="text-center mb-4">
+                    <h1 class="h3 mb-3 fw-normal">Confirm Reset</h1>
+                    <div class="mb-3">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-light text-primary rounded-circle"
+                          style="width: 60px; height: 60px;">
+                        <i class="fas fa-key fa-lg"></i>
+                    </span>
                     </div>
+                    <h2 class="h5 text-muted">Enter Verification Code</h2>
+                    <p class="text-muted small mt-2">
+                        We've sent a code to your registered email. <br>
+                        Enter it below to confirm your password change.
+                    </p>
+                </div>
 
-                    <div class="mt-3 text-muted small">
-                        <p><strong>Note:</strong> This OTP is valid for 10 minutes. Do not share it with anyone.</p>
+                <div class="alert alert-warning d-flex align-items-center small py-2" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div>
+                        Code expires in 10 minutes. Do not share it.
                     </div>
                 </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        {% include "users/common/form.html" with form=form %}
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-2 mb-3" type="submit">
+                        Verify & Continue
+                    </button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <p class="mb-0 small text-muted">
+                        Didn't receive the code?
+                        <a href="{% url 'users:reset-resend-otp-mail' %}" class="text-decoration-none fw-bold">Resend
+                            OTP</a>
+                    </p>
+                </div>
             </div>
-            <!-- //main content -->
+
+            <div class="card-footer bg-light border-0 text-center py-3">
+                <a href="{% url 'users:login' %}" class="small text-decoration-none text-muted">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Login
+                </a>
+            </div>
         </div>
-        <!-- //container -->
+
     </div>
 {% endblock %}
