@@ -28,10 +28,7 @@ class PathTokenValidationMixin:
     def dispatch(self, request, *args, **kwargs):
         if request.method == "GET":
             params = signing.loads(self.kwargs.get("token"))
-            if params.get("path") != self.pre_path or request.session.session_key != params.get("session_id"):
-                print("path token invalid")
-                print(f"path: {params.get("path")} -> {self.pre_path}")
-                print(f"path: {params.get("session_id")} -> {request.session.session_key}")
+            if params.get("path") != self.pre_path:
                 return self.token_invalid()
 
         return super().dispatch(request, *args, **kwargs)
